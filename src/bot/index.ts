@@ -35,7 +35,13 @@ bot.command('generate_invites', async (ctx) => {
 
     try {
         const codes = await UserService.generateInvitationCode(ctx.dbUser.id, count);
-        const codeStrings = codes.map(c => `\`${c.code}\``).join('\n');
+        const botInfo = await ctx.telegram.getMe();
+
+        const codeStrings = codes.map(c => {
+            const link = `https://t.me/${botInfo.username}?start=${c.code}`;
+            return `• \`${c.code}\`\n  🔗 ${link}`;
+        }).join('\n\n');
+
         await ctx.replyWithMarkdown(`Generated ${codes.length} invitation codes:\n\n${codeStrings}`);
     } catch (e) {
         logger.error("Error generating codes", e);

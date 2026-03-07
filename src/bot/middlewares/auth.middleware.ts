@@ -26,14 +26,20 @@ export const authMiddleware = async (ctx: CustomContext, next: () => Promise<voi
         if (ctx.message && 'text' in ctx.message) {
             const text = ctx.message.text.trim();
 
-            // Ignore /start command itself, ask for code instead
+            // If they just typed /start, ask for the code
             if (text === '/start') {
                 await ctx.reply('Welcome to Napster VPN VIP.\nThis is an invite-only service. Please enter your invitation code:');
                 return;
             }
 
-            // Try to use the text as an invitation code
-            const newUser = await UserService.useInvitationAndCreateUser(ctx.from.id, ctx.from.username, text);
+            // If they used a deep-link: /start <CODE>
+            let potentialCode = text;
+            if (text.startsWith('/start ')) {
+                potentialCode = text.split(' ')[1].trim();
+            }
+
+            // Try to use the code
+            const newUser = await UserService.useInvitationAndCreateUser(ctx.from.id, ctx.from.username, potentialCode);
 
             if (newUser) {
                 ctx.dbUser = newUser;

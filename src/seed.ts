@@ -1,5 +1,8 @@
 import { AppDataSource } from './database/data-source';
 import { User, InvitationCode } from './database/entities';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 async function seed() {
     await AppDataSource.initialize();
@@ -8,9 +11,14 @@ async function seed() {
     const codeRepository = AppDataSource.getRepository(InvitationCode);
 
     /*
-     * CHANGE THIS to your actual Telegram User ID so you can act as Admin
+     * Make sure ADMIN_TELEGRAM_ID is set in your .env file
      */
-    const ADMIN_TELEGRAM_ID = 123456789;
+    const adminIdEnv = process.env.ADMIN_TELEGRAM_ID;
+    if (!adminIdEnv) {
+        console.error("Please set ADMIN_TELEGRAM_ID in your .env file!");
+        process.exit(1);
+    }
+    const ADMIN_TELEGRAM_ID = parseInt(adminIdEnv, 10);
 
     console.log(`Seeding Admin User ID: ${ADMIN_TELEGRAM_ID}...`);
 
