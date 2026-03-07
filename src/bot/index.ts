@@ -42,9 +42,8 @@ bot.hears('🔗 Generate Invite Link', async (ctx) => {
         const botInfo = await ctx.telegram.getMe();
         const link = `https://t.me/${botInfo.username}?start=${code.code}`;
 
-        await ctx.replyWithMarkdown(
-            `Here is your invite link:\n\n🔗 ${link}\n\n` +
-            `_Note: This link can only be used by one person._`
+        await ctx.reply(
+            `Here is your invite link:\n\n🔗 ${link}\n\nNote: This link can only be used by one person.`
         );
     } catch (e) {
         logger.error("Error generating user invite", e);
