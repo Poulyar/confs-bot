@@ -36,7 +36,6 @@ export class Subscription {
     @Column({ type: 'timestamp', nullable: true })
     expiry_date: Date;
 
-
     @CreateDateColumn()
     created_at: Date;
 }

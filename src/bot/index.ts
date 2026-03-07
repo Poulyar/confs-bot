@@ -43,36 +43,12 @@ bot.hears('🔗 Generate Invite Link', async (ctx) => {
         const link = `https://t.me/${botInfo.username}?start=${code.code}`;
 
         await ctx.reply(
-            `Here is your invite link:\n\n🔗 ${link}\n\nNote: This link can only be used by one person.`
+            `Here is your invite link:\n\n🔗 <a href="${link}">${link}</a>\n\n<i>Note: This link can only be used by one person.</i>`,
+            { parse_mode: 'HTML' }
         );
     } catch (e) {
         logger.error("Error generating user invite", e);
         await ctx.reply("Failed to generate invite. Please try again later.");
-    }
-});
-
-// Handle "Free Trial" button click
-bot.hears('🎁 Free Trial', async (ctx) => {
-    if (!ctx.dbUser) return;
-
-    try {
-        await ctx.reply('Setting up your free VIP trial... Please wait ⏳');
-        const SubscriptionService = (await import('../services/subscription.service')).SubscriptionService;
-        const sub = await SubscriptionService.startTrial(ctx.dbUser);
-
-        if (!sub) throw new Error("Subscription returned null");
-
-        await ctx.reply(
-            `✅ *Trial Activated!*\n\n` +
-            `You have been granted 500MB of data for 24 hours.\n\n` +
-            `*Your Connection String:*\n` +
-            `\`${sub.config_link}\`\n\n` +
-            `_Tap the link above to copy it into your VPN client (v2rayNG, Vultr, Shadowrocket)._`,
-            { parse_mode: 'Markdown' }
-        );
-    } catch (e: any) {
-        logger.error("Error starting free trial", e);
-        await ctx.reply(e.message || "Failed to start free trial. You may have already used it.");
     }
 });
 
@@ -90,10 +66,10 @@ bot.command('generate_invites', async (ctx) => {
 
         const codeStrings = codes.map(c => {
             const link = `https://t.me/${botInfo.username}?start=${c.code}`;
-            return `• \`${c.code}\`\n  🔗 ${link}`;
+            return `• <code>${c.code}</code>\n  🔗 <a href="${link}">${link}</a>`;
         }).join('\n\n');
 
-        await ctx.replyWithMarkdown(`Generated ${codes.length} invitation codes:\n\n${codeStrings}`);
+        await ctx.reply(`Generated ${codes.length} invitation codes:\n\n${codeStrings}`, { parse_mode: 'HTML' });
     } catch (e) {
         logger.error("Error generating codes", e);
         await ctx.reply("Failed to generate codes.");
