@@ -18,7 +18,8 @@ export const startCommand = async (ctx: CustomContext) => {
     // Create main menu keyboard
     const keyboard = Markup.keyboard([
         ['🛒 Buy Plan', '🛡 My Subscriptions'],
-        ['🎁 Free Trial', '❓ Help Center'],
+        ['🎁 Free Trial', '🔗 Generate Invite Link'],
+        ['❓ Help Center']
     ]).resize();
 
     await ctx.replyWithMarkdown(welcomeMessage, keyboard);
