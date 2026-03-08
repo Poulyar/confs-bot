@@ -30,6 +30,9 @@ export class SubscriptionService {
             sub.plan_id = plan.id;
             sub.status = 'pending';
 
+            // Generate a random 8-character alphanumeric track ID (e.g. TRK-A1B2C3D4)
+            sub.track_id = 'TRK-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+
             // We set expiry/data later when exactly activated by the VPN API, 
             // but we can initialize data to plan structure.
             sub.remaining_data_gb = plan.volume_gb;

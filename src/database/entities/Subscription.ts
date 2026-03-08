@@ -14,6 +14,9 @@ export class Subscription {
     @Column()
     user_id: number;
 
+    @Column({ type: 'varchar', length: 20, unique: true })
+    track_id: string; // User friendly tracking ID for support
+
     @ManyToOne(() => Plan)
     @JoinColumn({ name: 'plan_id' })
     plan: Plan;

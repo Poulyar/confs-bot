@@ -116,6 +116,7 @@ bot.action(/manage_sub_(\d+)/, async (ctx) => {
         await ctx.answerCbQuery();
 
         let message = `📦 *Subscription Details*\n\n`;
+        message += `*Track ID:* \`${sub.track_id}\`\n`;
         message += `*Plan:* ${sub.plan.name}\n`;
         message += `*Status:* ${sub.status.toUpperCase()}\n`;
 
