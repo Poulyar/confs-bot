@@ -45,6 +45,7 @@ export class SubscriptionService {
             tx.sub_id = savedSub.id;
             tx.tx_hash = txHash;
             tx.amount = plan.price_usdt;
+            tx.track_id = trackId; // Keep them unified
             tx.status = 'pending';
 
             const savedTx = await queryRunner.manager.save(tx);

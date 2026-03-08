@@ -21,6 +21,9 @@ export class Transaction {
     @Column()
     sub_id: number;
 
+    @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
+    track_id: string; // User friendly tracking ID for support
+
     // The actual hash user pastes
     @Column({ type: 'text', unique: true })
     tx_hash: string;
