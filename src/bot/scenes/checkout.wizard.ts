@@ -1,6 +1,7 @@
 import { Scenes, Markup } from 'telegraf';
 import { CustomContext } from '../../types';
 import { PlanService } from '../../services/plan.service';
+import { SubscriptionService } from '../../services/subscription.service';
 import { logger } from '../../utils/logger';
 
 // Hardcoded Dummy Wallets for now
@@ -97,15 +98,34 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         const txid = ctx.message.text.trim();
         const state = ctx.scene.state as any;
 
-        // Note: For now, we mock the success. In Phase 2, we will save this to the DB as 'pending'
-        // and notify admins or auto-check the blockchain.
+        try {
+            // We need the resolved user from context and plan from wizard state
+            const user = ctx.dbUser;
+            const plan = state.plan;
 
-        await ctx.reply(
-            `✅ *Payment Received!*\n\n` +
-            `Thank you. We have recorded your TXID:\n\`${txid}\`\n\n` +
-            `Your payment is now **Processing**. Once verified, your VPN configuration will be delivered here automatically.`,
-            { parse_mode: 'Markdown' }
-        );
+            if (!user || !plan) {
+                throw new Error("Session expired. Missing user or plan.");
+            }
+
+            // Call the service to save to Postgres
+            await SubscriptionService.createPendingPurchase(user, plan, txid);
+
+            await ctx.reply(
+                `✅ *Payment Received & Recorded!*\n\n` +
+                `Thank you. We have securely saved your TXID:\n\`${txid}\`\n\n` +
+                `Your payment is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.`,
+                { parse_mode: 'Markdown' }
+            );
+        } catch (e: any) {
+            logger.error(`Checkout Wizard Error Saving TXID: ${e.message}`);
+            // If they provided a duplicate TX hash, we will let them know
+            if (e.message.includes("already exists")) {
+                await ctx.reply("❌ That Transaction ID has already been submitted in our system. Please check your TXID and try again.");
+                // Re-ask for TXID by not leaving the scene
+                return;
+            }
+            await ctx.reply("❌ An internal database error occurred while saving your transaction. Please contact support.");
+        }
 
         return ctx.scene.leave();
     }
