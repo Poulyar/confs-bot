@@ -88,7 +88,7 @@ bot.hears('🛡 My Subscriptions', async (ctx) => {
         // Create an inline button for each subscription
         const buttons = subs.map(sub => {
             const statusEmoji = sub.status === 'active' ? '🟢' : (sub.status === 'pending' ? '⏳' : '🔴');
-            const label = `${statusEmoji} #${sub.track_id} - ${sub.plan.name}`;
+            const label = `${statusEmoji} ${sub.track_id} - ${sub.plan.name}`;
             return [Markup.button.callback(label, `manage_sub_${sub.id}`)];
         });
 
@@ -162,7 +162,7 @@ bot.action('list_subs', async (ctx) => {
 
         const buttons = subs.map(sub => {
             const statusEmoji = sub.status === 'active' ? '🟢' : (sub.status === 'pending' ? '⏳' : '🔴');
-            const label = `${statusEmoji} #${sub.track_id} - ${sub.plan.name}`;
+            const label = `${statusEmoji} ${sub.track_id} - ${sub.plan.name}`;
             return [Markup.button.callback(label, `manage_sub_${sub.id}`)];
         });
 

@@ -120,7 +120,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             await ctx.reply(
                 `✅ *Payment Received & Recorded!*\n\n` +
                 `Thank you. We have securely saved your TXID:\n\`${txid}\`\n\n` +
-                `Your payment (\`#${trackId}\`) is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.`,
+                `Your payment (\`${trackId}\`) is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.`,
                 { parse_mode: 'Markdown' }
             );
         } catch (e: any) {
