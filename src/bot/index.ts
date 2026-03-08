@@ -5,6 +5,9 @@ import { startCommand, adminCommand } from './commands/start.command';
 import { logger } from '../utils/logger';
 import * as dotenv from 'dotenv';
 import { UserService } from '../services/user.service';
+import { PlanService } from '../services/plan.service';
+import { Markup } from 'telegraf';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 dotenv.config();
 
@@ -13,7 +16,15 @@ if (!token) {
     throw new Error('BOT_TOKEN must be provided!');
 }
 
-export const bot = new Telegraf<CustomContext>(token);
+let botConfig: any = {};
+if (process.env.HTTP_PROXY) {
+    botConfig.telegram = {
+        agent: new HttpsProxyAgent(process.env.HTTP_PROXY)
+    };
+    logger.info(`Using HTTP_PROXY: ${process.env.HTTP_PROXY} for Telegram API`);
+}
+
+export const bot = new Telegraf<CustomContext>(token, botConfig);
 
 // Basic session memory (required for scenes/wizards)
 bot.use(session());
@@ -24,6 +35,29 @@ bot.use(authMiddleware);
 // Register Commands
 bot.start(startCommand);
 bot.command('admin', adminCommand);
+
+// Handle "Buy Plan" button click
+bot.hears('🛒 Buy Plan', async (ctx) => {
+    try {
+        const plans = await PlanService.getAllPlans();
+
+        if (plans.length === 0) {
+            return ctx.reply("There are currently no active plans to purchase. Please check back later.");
+        }
+
+        // Group the plans into rows of 1 for the inline keyboard
+        const buttons = plans.map(plan => {
+            const label = `${plan.name} - ${plan.volume_gb > 0 ? plan.volume_gb + 'GB' : 'Unlimited'} - $${plan.price_usdt}`;
+            return [Markup.button.callback(label, `buy_plan_${plan.id}`)];
+        });
+
+        await ctx.reply("Please select a plan from the options below:", Markup.inlineKeyboard(buttons));
+
+    } catch (e) {
+        logger.error("Error fetching plans", e);
+        await ctx.reply("An error occurred while fetching our plans. Please try again.");
+    }
+});
 
 // Handle "Generate Invite Link" button click
 bot.hears('🔗 Generate Invite Link', async (ctx) => {
