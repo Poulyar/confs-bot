@@ -27,15 +27,15 @@ if (process.env.HTTP_PROXY) {
 
 export const bot = new Telegraf<CustomContext>(token, botConfig);
 
-// Setup scenes
-const stage = new Scenes.Stage<CustomContext>([checkoutWizard]);
-
 // Basic session memory (required for scenes/wizards)
 bot.use(session());
-bot.use(stage.middleware());
 
-// Apply our custom authentication/gatekeeping middleware
+// Apply our custom authentication/gatekeeping middleware FIRST
 bot.use(authMiddleware);
+
+// Setup scenes (This must come AFTER authMiddleware so scenes have ctx.dbUser)
+const stage = new Scenes.Stage<CustomContext>([checkoutWizard]);
+bot.use(stage.middleware());
 
 // Register Commands
 bot.start(startCommand);
