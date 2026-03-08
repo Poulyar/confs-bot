@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import * as dotenv from 'dotenv';
 import { UserService } from '../services/user.service';
 import { PlanService } from '../services/plan.service';
+import { SubscriptionService } from '../services/subscription.service';
 import { Markup } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { checkoutWizard } from './scenes/checkout.wizard';
@@ -71,6 +72,103 @@ bot.action(/buy_plan_(\d+)/, async (ctx) => {
     // Enter the wizard scene and pass the planId in the state
     await ctx.scene.enter('CHECKOUT_WIZARD', { planId });
     await ctx.answerCbQuery();
+});
+
+// Handle "My Subscriptions" button click
+bot.hears('🛡 My Subscriptions', async (ctx) => {
+    if (!ctx.dbUser) return;
+
+    try {
+        const subs = await SubscriptionService.getUserSubscriptions(ctx.dbUser.id);
+
+        if (subs.length === 0) {
+            return ctx.reply("You don't have any subscriptions yet. Click '🛒 Buy Plan' to get started.");
+        }
+
+        // Create an inline button for each subscription
+        const buttons = subs.map(sub => {
+            const statusEmoji = sub.status === 'active' ? '🟢' : (sub.status === 'pending' ? '⏳' : '🔴');
+            const label = `${statusEmoji} ${sub.plan.name} (${sub.status})`;
+            return [Markup.button.callback(label, `manage_sub_${sub.id}`)];
+        });
+
+        await ctx.reply("Here are your subscriptions. Click on one to view details:", Markup.inlineKeyboard(buttons));
+
+    } catch (e) {
+        logger.error("Error fetching subscriptions", e);
+        await ctx.reply("Failed to load your subscriptions.");
+    }
+});
+
+// Handle viewing a specific subscription's details
+bot.action(/manage_sub_(\d+)/, async (ctx) => {
+    if (!ctx.dbUser) return;
+    const subId = parseInt(ctx.match[1], 10);
+
+    try {
+        const sub = await SubscriptionService.getSubscriptionById(subId, ctx.dbUser.id);
+
+        if (!sub) {
+            await ctx.answerCbQuery("Subscription not found.");
+            return;
+        }
+
+        await ctx.answerCbQuery();
+
+        let message = `📦 *Subscription Details*\n\n`;
+        message += `*Plan:* ${sub.plan.name}\n`;
+        message += `*Status:* ${sub.status.toUpperCase()}\n`;
+
+        if (sub.status === 'pending') {
+            message += `\n_Your payment is currently being reviewed. Your config will appear here once approved._`;
+        } else if (sub.status === 'active' || sub.status === 'expired') {
+            message += `*Data Remaining:* ${sub.remaining_data_gb} GB\n`;
+            message += `*Expiry:* ${sub.expiry_date ? sub.expiry_date.toLocaleDateString() : 'N/A'}\n\n`;
+
+            if (sub.config_link) {
+                // In HTML mode, we can format the config link as a monospaced block for easy copying
+                message += `*Your Connection Config:*\n\`${sub.config_link}\``;
+            } else {
+                message += `_Config link not assigned yet._`;
+            }
+        }
+
+        // Future enhancements: Add a "Refresh Config" or "Reset UUID" button here
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback('🔙 Back to List', 'list_subs')]
+        ]);
+
+        await ctx.reply(message, { parse_mode: 'Markdown', ...keyboard });
+
+    } catch (e) {
+        logger.error(`Error fetching sub ${subId}`, e);
+        await ctx.answerCbQuery("Failed to load details.");
+    }
+});
+
+// Handle 'Back to List' button
+bot.action('list_subs', async (ctx) => {
+    await ctx.answerCbQuery();
+    // Re-trigger the My Subscriptions view
+    // Since ctx.message.text won't exist in a callback query, we just copy the logic
+    try {
+        if (!ctx.dbUser) return;
+        const subs = await SubscriptionService.getUserSubscriptions(ctx.dbUser.id);
+
+        if (subs.length === 0) {
+            return ctx.editMessageText("You don't have any subscriptions yet. Click '🛒 Buy Plan' to get started.");
+        }
+
+        const buttons = subs.map(sub => {
+            const statusEmoji = sub.status === 'active' ? '🟢' : (sub.status === 'pending' ? '⏳' : '🔴');
+            const label = `${statusEmoji} ${sub.plan.name} (${sub.status})`;
+            return [Markup.button.callback(label, `manage_sub_${sub.id}`)];
+        });
+
+        await ctx.editMessageText("Here are your subscriptions. Click on one to view details:", Markup.inlineKeyboard(buttons));
+    } catch (e) {
+        logger.error("Error refreshing subs", e);
+    }
 });
 
 // Handle "Generate Invite Link" button click

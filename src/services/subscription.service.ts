@@ -60,4 +60,25 @@ export class SubscriptionService {
             await queryRunner.release();
         }
     }
+
+    /**
+     * Retrieves all subscriptions for a specific user, including the related Plan data.
+     */
+    static async getUserSubscriptions(userId: number): Promise<Subscription[]> {
+        return await this.getSubRepository().find({
+            where: { user_id: userId },
+            relations: ['plan'],
+            order: { created_at: 'DESC' }
+        });
+    }
+
+    /**
+     * Retrieves a single subscription by ID, ensuring it belongs to the user.
+     */
+    static async getSubscriptionById(subId: number, userId: number): Promise<Subscription | null> {
+        return await this.getSubRepository().findOne({
+            where: { id: subId, user_id: userId },
+            relations: ['plan']
+        });
+    }
 }
