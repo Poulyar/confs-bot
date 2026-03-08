@@ -32,7 +32,11 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             return ctx.scene.leave();
         }
 
+        // Generate a simple 6-digit track ID (e.g. 123456)
+        const trackId = Math.floor(100000 + Math.random() * 900000).toString();
+
         (ctx.scene.state as any).plan = plan;
+        (ctx.scene.state as any).trackId = trackId;
 
         const networkKeyboard = Markup.inlineKeyboard([
             [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
@@ -72,12 +76,14 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         const network = action.split('_')[1] as keyof typeof WALLETS;
         const walletAddress = WALLETS[network];
         const plan = (ctx.scene.state as any).plan;
+        const trackId = (ctx.scene.state as any).trackId;
 
         (ctx.scene.state as any).network = network;
 
         await ctx.answerCbQuery();
         await ctx.reply(
             `🏦 *Payment Instructions*\n\n` +
+            `*Track ID:* \`${trackId}\`\n\n` +
             `Please send exactly *$${plan.price_usdt} USDT* via *${network}* network to the following address:\n\n` +
             `\`${walletAddress}\`\n\n` +
             `_Tap the address above to copy it._\n\n` +
@@ -102,18 +108,19 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             // We need the resolved user from context and plan from wizard state
             const user = ctx.dbUser;
             const plan = state.plan;
+            const trackId = state.trackId;
 
-            if (!user || !plan) {
+            if (!user || !plan || !trackId) {
                 throw new Error("Session expired. Missing user or plan.");
             }
 
             // Call the service to save to Postgres
-            await SubscriptionService.createPendingPurchase(user, plan, txid);
+            await SubscriptionService.createPendingPurchase(user, plan, txid, trackId);
 
             await ctx.reply(
                 `✅ *Payment Received & Recorded!*\n\n` +
                 `Thank you. We have securely saved your TXID:\n\`${txid}\`\n\n` +
-                `Your payment is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.`,
+                `Your payment (\`#${trackId}\`) is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.`,
                 { parse_mode: 'Markdown' }
             );
         } catch (e: any) {

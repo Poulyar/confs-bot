@@ -12,7 +12,7 @@ export class SubscriptionService {
     /**
      * Creates a pending subscription and a linked pending transaction for a user purchasing a plan.
      */
-    static async createPendingPurchase(user: User, plan: Plan, txHash: string): Promise<{ subscription: Subscription, transaction: Transaction }> {
+    static async createPendingPurchase(user: User, plan: Plan, txHash: string, trackId: string): Promise<{ subscription: Subscription, transaction: Transaction }> {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
