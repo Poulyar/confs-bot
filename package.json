@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start:dev": "ts-node src/index.ts",
+    "start:dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "seed": "ts-node src/seed.ts",
     "typeorm": "typeorm-ts-node-commonjs"
   },
@@ -23,6 +23,7 @@
   "devDependencies": {
     "@types/node": "^25.3.5",
     "@types/node-cron": "^3.0.11",
+    "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
