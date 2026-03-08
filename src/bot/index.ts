@@ -8,6 +8,7 @@ import { UserService } from '../services/user.service';
 import { PlanService } from '../services/plan.service';
 import { Markup } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { checkoutWizard } from './scenes/checkout.wizard';
 
 dotenv.config();
 
@@ -26,8 +27,12 @@ if (process.env.HTTP_PROXY) {
 
 export const bot = new Telegraf<CustomContext>(token, botConfig);
 
+// Setup scenes
+const stage = new Scenes.Stage<CustomContext>([checkoutWizard]);
+
 // Basic session memory (required for scenes/wizards)
 bot.use(session());
+bot.use(stage.middleware());
 
 // Apply our custom authentication/gatekeeping middleware
 bot.use(authMiddleware);
@@ -57,6 +62,15 @@ bot.hears('🛒 Buy Plan', async (ctx) => {
         logger.error("Error fetching plans", e);
         await ctx.reply("An error occurred while fetching our plans. Please try again.");
     }
+});
+
+// Handle the Inline Keyboard button click for purchasing a plan
+bot.action(/buy_plan_(\d+)/, async (ctx) => {
+    const planId = ctx.match[1];
+
+    // Enter the wizard scene and pass the planId in the state
+    await ctx.scene.enter('CHECKOUT_WIZARD', { planId });
+    await ctx.answerCbQuery();
 });
 
 // Handle "Generate Invite Link" button click
