@@ -15,6 +15,9 @@ export class User {
     @Column({ type: 'boolean', default: false })
     has_used_trial: boolean = false;
 
+    @Column({ type: 'boolean', default: false })
+    is_admin: boolean = false;
+
     @Column({ type: 'boolean', default: true })
     is_active: boolean = true;
 

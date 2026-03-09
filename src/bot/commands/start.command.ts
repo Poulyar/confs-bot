@@ -27,9 +27,8 @@ export const startCommand = async (ctx: CustomContext) => {
 
 export const adminCommand = async (ctx: CustomContext) => {
     const user = ctx.dbUser;
-    // Let's assume user.id === 1 is the super admin for now.
-    // We can add a role or is_admin flag to the User entity later.
-    if (user?.id !== 1) {
+
+    if (!user?.is_admin) {
         await ctx.reply('You do not have permission to use this command.');
         return;
     }

@@ -42,6 +42,78 @@ bot.use(stage.middleware());
 bot.start(startCommand);
 bot.command('admin', adminCommand);
 
+// Handle Admin /pending command
+bot.command('pending', async (ctx) => {
+    if (!ctx.dbUser?.is_admin) return ctx.reply("Unauthorized.");
+
+    try {
+        const pendings = await SubscriptionService.getPendingSubscriptions();
+
+        if (pendings.length === 0) {
+            return ctx.reply("There are no pending subscriptions to review.");
+        }
+
+        for (const { subscription: sub, transaction: tx } of pendings) {
+            let msg = `🔥 *Pending Approval*\n\n`;
+            msg += `👤 *User ID:* ${sub.user.id} (@${sub.user.username || 'unknown'})\n`;
+            msg += `📦 *Plan:* ${sub.plan.name} ($${tx.amount})\n`;
+            msg += `🧾 *Track ID:* ${sub.track_id}\n`;
+            msg += `🔗 *Hash:* \`${tx.tx_hash}\`\n\n`;
+            msg += `_Submitted around ${tx.created_at.toLocaleString()}._`;
+
+            const keyboard = Markup.inlineKeyboard([
+                Markup.button.callback('✅ Approve', `approve_tx_${sub.id}`),
+                Markup.button.callback('❌ Reject', `reject_tx_${sub.id}`)
+            ]);
+
+            await ctx.reply(msg, { parse_mode: 'Markdown', ...keyboard });
+        }
+    } catch (e) {
+        logger.error("Error fetching pendings", e);
+        await ctx.reply("Error fetching pending transactions.");
+    }
+});
+
+// Admin approves transaction
+bot.action(/approve_tx_(\d+)/, async (ctx) => {
+    if (!ctx.dbUser?.is_admin) return;
+    const subId = parseInt(ctx.match[1], 10);
+
+    try {
+        const sub = await SubscriptionService.approveSubscription(subId);
+
+        // Update the admin msg
+        await ctx.editMessageText(`✅ *Approved: Track ID ${sub.track_id}*\nHash has been verified and user notified.`, { parse_mode: 'Markdown' });
+
+        // Notify the user directly
+        const userMsg = `🎉 *Payment Approved!*\n\nYour transaction (${sub.track_id}) has been verified.\n\n*Your Connection Config:*\n\`${sub.config_link}\`\n\nYou can also find this link in '🛡 My Subscriptions'.`;
+        await ctx.telegram.sendMessage(sub.user.telegram_id.toString(), userMsg, { parse_mode: 'Markdown' });
+    } catch (e: any) {
+        logger.error(`Approve error: ${e.message}`);
+        await ctx.answerCbQuery(`Error: ${e.message}`);
+    }
+});
+
+// Admin rejects transaction
+bot.action(/reject_tx_(\d+)/, async (ctx) => {
+    if (!ctx.dbUser?.is_admin) return;
+    const subId = parseInt(ctx.match[1], 10);
+
+    try {
+        const sub = await SubscriptionService.rejectSubscription(subId);
+
+        // Update admin msg
+        await ctx.editMessageText(`❌ *Rejected: Track ID ${sub.track_id}*\nTransaction was rejected and user notified.`, { parse_mode: 'Markdown' });
+
+        // Notify user directly
+        const userMsg = `🚫 *Payment Rejected*\n\nYour transaction (${sub.track_id}) could not be verified by our team. If you believe this is an error, please contact support and provide your hash.`;
+        await ctx.telegram.sendMessage(sub.user.telegram_id.toString(), userMsg, { parse_mode: 'Markdown' });
+    } catch (e: any) {
+        logger.error(`Reject error: ${e.message}`);
+        await ctx.answerCbQuery(`Error: ${e.message}`);
+    }
+});
+
 // Handle "Buy Plan" button click
 bot.hears('🛒 Buy Plan', async (ctx) => {
     try {
