@@ -23,5 +23,17 @@ services:
     depends_on:
       - db
 
+  bot:
+    build: .
+    container_name: napster_vpn_bot
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+
 volumes:
   postgres_data:
