@@ -38,7 +38,8 @@ export const adminCommand = async (ctx: CustomContext) => {
     }
 
     const kb = Markup.inlineKeyboard([
-        [Markup.button.callback(t(lang, 'admin_coupon_btn'), 'generate_coupon')]
+        [Markup.button.callback(t(lang, 'admin_coupon_btn'), 'generate_coupon')],
+        [Markup.button.callback(t(lang, 'admin_pending_btn'), 'admin_pending_subs')]
     ]);
 
     await ctx.reply('Admin Panel Flow:\n\nSelect an administration wizard:', kb);

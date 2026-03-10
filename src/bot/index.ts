@@ -53,16 +53,24 @@ bot.action('generate_coupon', async (ctx) => {
     await ctx.answerCbQuery();
 });
 
-// Handle Admin /pending command
-bot.command('pending', async (ctx) => {
-    if (!ctx.dbUser?.is_admin) return ctx.reply("Unauthorized.");
+const handlePendingSubs = async (ctx: any) => {
+    if (!ctx.dbUser?.is_admin) {
+        if (ctx.callbackQuery) await ctx.answerCbQuery("Unauthorized", { show_alert: true });
+        else await ctx.reply("Unauthorized.");
+        return;
+    }
 
     try {
         const pendings = await SubscriptionService.getPendingSubscriptions();
 
         if (pendings.length === 0) {
-            return ctx.reply("There are no pending subscriptions to review.");
+            const msg = "There are no pending subscriptions to review.";
+            if (ctx.callbackQuery) await ctx.answerCbQuery(msg, { show_alert: true });
+            else await ctx.reply(msg);
+            return;
         }
+
+        if (ctx.callbackQuery) await ctx.answerCbQuery();
 
         for (const { subscription: sub, transaction: tx } of pendings) {
             let msg = `🔥 *Pending Approval*\n\n`;
@@ -83,7 +91,10 @@ bot.command('pending', async (ctx) => {
         logger.error("Error fetching pendings", e);
         await ctx.reply("Error fetching pending transactions.");
     }
-});
+};
+
+bot.command('pending', handlePendingSubs);
+bot.action('admin_pending_subs', handlePendingSubs);
 
 // Admin approves transaction
 bot.action(/approve_tx_(\d+)/, async (ctx) => {

@@ -37,6 +37,7 @@ export const fa = {
 
     // Coupons - Admin
     admin_coupon_btn: "🎫 ساخت کد تخفیف",
+    admin_pending_btn: "⏳ بررسی اشتراک‌های در انتظار",
     admin_coupon_percent: "درصد تخفیف را وارد کنید (مثلاً ۲۰) یا /cancel را بزنید:",
     admin_coupon_hours: "زمان انقضا به ساعت را وارد کنید (مثلاً ۲۴) یا /cancel را بزنید:",
     admin_coupon_success: "🎉 کد تخفیف ساخته شد!\nکد: `{{code}}`\nتخفیف: {{percent}}%\nانقضا در: {{hours}} ساعت.",

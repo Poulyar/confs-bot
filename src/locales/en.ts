@@ -37,6 +37,7 @@ export const en = {
 
     // Coupons - Admin
     admin_coupon_btn: "🎫 Generate Coupon",
+    admin_pending_btn: "⏳ Review Pending Subs",
     admin_coupon_percent: "Enter discount percentage (e.g., 20) or type /cancel:",
     admin_coupon_hours: "Enter expiry time in hours (e.g., 24) or type /cancel:",
     admin_coupon_success: "🎉 Coupon created!\nCode: `{{code}}`\nDiscount: {{percent}}%\nExpires In: {{hours}} hours.",
