@@ -1,5 +1,6 @@
 import { AppDataSource } from '../database/data-source';
 import { Subscription, Transaction, User, Plan } from '../database/entities';
+import { VpnService } from './vpn.service';
 
 export class SubscriptionService {
     static getSubRepository() {
@@ -118,15 +119,22 @@ export class SubscriptionService {
             const tx = await manager.findOne(Transaction, { where: { sub_id: subId } });
             if (!tx) throw new Error("Transaction not found");
 
-            // Generate dummy config
-            const dummyConfig = `vless://dummy-uuid-${sub.user_id}-${Date.now()}@vprivate-server:443?type=tcp&security=tls#${sub.track_id}`;
-
             // Set Expiry Date based on plan duration
             const expiry = new Date();
             expiry.setDate(expiry.getDate() + sub.plan.duration_days);
 
+            // Generate real config using 3X-UI
+            const email = `user_${sub.user_id}_sub_${sub.id}`;
+            const limitGb = sub.plan.volume_gb;
+            const expiryMs = expiry.getTime(); // 3X-UI uses epoch milliseconds
+
+            const realConfig = await VpnService.createClient(email, limitGb, expiryMs);
+            if (!realConfig) {
+                throw new Error("Failed to generate real VPN configuration from 3X-UI panel.");
+            }
+
             sub.status = 'active';
-            sub.config_link = dummyConfig;
+            sub.config_link = realConfig;
             sub.expiry_date = expiry;
 
             tx.status = 'confirmed';
@@ -196,12 +204,22 @@ export class SubscriptionService {
             sub.track_id = trackId;
             sub.remaining_data_gb = trialPlan.volume_gb;
 
-            const dummyConfig = `vless://trial-dummy-uuid-${currentDbUser.id}-${Date.now()}@vprivate-server:443?type=tcp&security=tls#${trackId}`;
-
             const expiry = new Date();
             expiry.setDate(expiry.getDate() + trialPlan.duration_days);
 
-            sub.config_link = dummyConfig;
+            // Generate real config using 3X-UI
+            // Use a temporary ID since sub.id doesn't exist until saved
+            const tempId = Date.now().toString().slice(-4);
+            const email = `trial_${currentDbUser.id}_${tempId}`;
+            const limitGb = trialPlan.volume_gb;
+            const expiryMs = expiry.getTime();
+
+            const realConfig = await VpnService.createClient(email, limitGb, expiryMs);
+            if (!realConfig) {
+                throw new Error("Failed to generate trial VPN configuration from 3X-UI panel.");
+            }
+
+            sub.config_link = realConfig;
             sub.expiry_date = expiry;
 
             await manager.save(sub);
