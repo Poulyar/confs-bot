@@ -42,6 +42,15 @@ export const en = {
     admin_coupon_hours: "Enter expiry time in hours (e.g., 24) or type /cancel:",
     admin_coupon_success: "🎉 Coupon created!\nCode: `{{code}}`\nDiscount: {{percent}}%\nExpires In: {{hours}} hours.",
     admin_coupon_invalid: "Invalid input. Please enter a valid number.",
+    admin_no_pending: "There are no pending subscriptions to review.",
+    admin_pending_title: "🔥 *Pending Approval*",
+    admin_pending_user: "👤 *User ID:* {{id}} (@{{username}})",
+    admin_pending_plan: "📦 *Plan:* {{planName}} (${{amount}})",
+    admin_pending_track: "🧾 *Track ID:* {{trackId}}",
+    admin_pending_hash: "🔗 *Hash:* `{{hash}}`",
+    admin_pending_submitted: "_Submitted around {{date}}._",
+    admin_pending_approve: "✅ Approve",
+    admin_pending_reject: "❌ Reject",
 
     // Coupons - Checkout
     checkout_apply_coupon_btn: "🎫 Apply Coupon",

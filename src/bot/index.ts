@@ -63,8 +63,10 @@ const handlePendingSubs = async (ctx: any) => {
     try {
         const pendings = await SubscriptionService.getPendingSubscriptions();
 
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
         if (pendings.length === 0) {
-            const msg = "There are no pending subscriptions to review.";
+            const msg = t(lang, 'admin_no_pending');
             if (ctx.callbackQuery) await ctx.answerCbQuery(msg, { show_alert: true });
             else await ctx.reply(msg);
             return;
@@ -73,16 +75,16 @@ const handlePendingSubs = async (ctx: any) => {
         if (ctx.callbackQuery) await ctx.answerCbQuery();
 
         for (const { subscription: sub, transaction: tx } of pendings) {
-            let msg = `🔥 *Pending Approval*\n\n`;
-            msg += `👤 *User ID:* ${sub.user.id} (@${sub.user.username || 'unknown'})\n`;
-            msg += `📦 *Plan:* ${sub.plan.name} ($${tx.amount})\n`;
-            msg += `🧾 *Track ID:* ${sub.track_id}\n`;
-            msg += `🔗 *Hash:* \`${tx.tx_hash}\`\n\n`;
-            msg += `_Submitted around ${tx.created_at.toLocaleString()}._`;
+            let msg = `${t(lang, 'admin_pending_title')}\n\n`;
+            msg += `${t(lang, 'admin_pending_user', { id: sub.user.id.toString(), username: sub.user.username || 'unknown' })}\n`;
+            msg += `${t(lang, 'admin_pending_plan', { planName: sub.plan.name, amount: tx.amount.toString() })}\n`;
+            msg += `${t(lang, 'admin_pending_track', { trackId: sub.track_id })}\n`;
+            msg += `${t(lang, 'admin_pending_hash', { hash: tx.tx_hash })}\n\n`;
+            msg += `${t(lang, 'admin_pending_submitted', { date: tx.created_at.toLocaleString() })}`;
 
             const keyboard = Markup.inlineKeyboard([
-                Markup.button.callback('✅ Approve', `approve_tx_${sub.id}`),
-                Markup.button.callback('❌ Reject', `reject_tx_${sub.id}`)
+                Markup.button.callback(t(lang, 'admin_pending_approve'), `approve_tx_${sub.id}`),
+                Markup.button.callback(t(lang, 'admin_pending_reject'), `reject_tx_${sub.id}`)
             ]);
 
             await ctx.reply(msg, { parse_mode: 'Markdown', ...keyboard });
@@ -406,6 +408,7 @@ bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {
 
         const code = codes[0];
         const botInfo = await ctx.telegram.getMe();
+        // Fixed telegram deep link format
         const link = `https://t.me/${botInfo.username}?start=${code.code}`;
 
         await ctx.reply(

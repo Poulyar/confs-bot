@@ -42,6 +42,15 @@ export const fa = {
     admin_coupon_hours: "زمان انقضا به ساعت را وارد کنید (مثلاً ۲۴) یا /cancel را بزنید:",
     admin_coupon_success: "🎉 کد تخفیف ساخته شد!\nکد: `{{code}}`\nتخفیف: {{percent}}%\nانقضا در: {{hours}} ساعت.",
     admin_coupon_invalid: "ورودی نامعتبر است. لطفاً یک عدد معتبر وارد کنید.",
+    admin_no_pending: "هیچ اشتراک در انتظاری برای بررسی وجود ندارد.",
+    admin_pending_title: "🔥 *در انتظار تایید*",
+    admin_pending_user: "👤 *شناسه کاربر:* {{id}} (@{{username}})",
+    admin_pending_plan: "📦 *طرح:* {{planName}} (${{amount}})",
+    admin_pending_track: "🧾 *کد پیگیری:* {{trackId}}",
+    admin_pending_hash: "🔗 *هش:* `{{hash}}`",
+    admin_pending_submitted: "_ارسال شده در حوالی {{date}}._",
+    admin_pending_approve: "✅ تایید",
+    admin_pending_reject: "❌ رد کردن",
 
     // Coupons - Checkout
     checkout_apply_coupon_btn: "🎫 اعمال کد تخفیف",
