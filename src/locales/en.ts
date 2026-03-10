@@ -63,13 +63,55 @@ export const en = {
 
     // Coupons - Checkout
     checkout_apply_coupon_btn: "🎫 Apply Coupon",
-    checkout_enter_coupon: "Please enter your coupon code or type /cancel to skip:",
-    checkout_coupon_applied: "✅ Coupon applied! You got {{percent}}% off.\nNew price: ${{price}} USDT",
-    checkout_invalid_coupon_code: "❌ Invalid or non-existent coupon.",
-    checkout_coupon_already_used: "❌ This coupon has already been used.",
-    checkout_coupon_expired: "❌ This coupon has expired.",
-    checkout_coupon_not_for_user: "❌ This coupon isn't assigned to you.",
+    checkout_enter_coupon: "Please enter your coupon code or type /cancel:",
+    checkout_coupon_applied: "🎉 Coupon applied! Discount: {{percent}}%\nNew Price: ${{price}}",
+    checkout_invalid_coupon_code: "❌ Invalid coupon code. Please try again or type /cancel.",
+    checkout_CouponNotFound: "❌ Coupon not found.",
+    checkout_CouponAlreadyUsed: "❌ This coupon has already been used.",
+    checkout_CouponExpired: "❌ This coupon has expired.",
+    checkout_CouponNotForUser: "❌ This coupon is not assigned to you.",
+    checkout_error_no_plan: "Error: No plan selected. Please try again.",
+    checkout_error_plan_not_found: "Error: Plan not found.",
+    checkout_cancel_btn: "❌ Cancel",
+    checkout_step1_text: "You selected: *{{planName}}*\nPrice: *${{price}} USDT*\n\nPlease select your preferred network for payment:",
+    checkout_coupon_cancelled: "Coupon entry cancelled. Please select a network to continue.",
+    checkout_100_discount: "🎉 *100% Discount Applied!* Generating your subscription instantly...",
+    checkout_free_success: "✅ *Subscription Activated!*\n\nYour 100% discount was successfully redeemed.\n\n*Your Connection Config:*\n`{{config}}`\n\nYou can also find this link in '🛡 My Subscriptions'.",
+    checkout_free_error: "❌ Internal error generating your subscription. Please contact support and mention coupon code {{code}}.",
+    checkout_select_network: "Please select your preferred network for payment (${{price}} USDT):",
+    checkout_click_network_btn: "Please click one of the network buttons.",
+    checkout_checkout_cancelled: "Checkout cancelled.",
+    checkout_invalid_network: "Invalid network selection.",
+    checkout_payment_instructions: "🏦 *Payment Instructions*\n\n*Track ID:* `{{trackId}}`\n\nPlease send exactly *${{price}} USDT* via *{{network}}* network to the following address:\n\n`{{wallet}}`\n\n_Tap the address above to copy it._\n\n⏳ Once you have sent the payment, please **reply to this message** with your **Transaction ID (TXID) / Hash**.",
+    checkout_send_txid: "Please send your Transaction ID (TXID) as text.",
+    checkout_session_expired: "Session expired. Missing user or plan.",
+    checkout_txid_recorded: "✅ *Payment Received & Recorded!*\n\nThank you. We have securely saved your TXID:\n`{{txid}}`\n\nYour payment (`{{trackId}}`) is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.",
+    checkout_txid_exists: "❌ That Transaction ID has already been submitted in our system. Please check your TXID and try again.",
+    checkout_db_error: "❌ An internal database error occurred while saving your transaction. Please contact support.",
 
-    // Lang
-    lang_changed: "✅ Language has been changed to English."
+    // Language
+    lang_changed: "✅ Language has been changed to English.",
+    lang_error_saving: "Error saving language.",
+    lang_error_changing: "Error changing language.",
+
+    // Subscriptions Panel
+    sub_not_found: "Subscription not found.",
+    sub_back_btn: "🔙 Back to List",
+    sub_empty_list: "You don't have any subscriptions yet. Click '🛒 Buy Plan' to get started.",
+    sub_list_header: "Here are your subscriptions. Click on one to view details:",
+    sub_details_title: "📦 *Subscription Details*\n\n",
+    sub_track_id: "*Track ID:* `{{trackId}}`\n",
+    sub_plan: "*Plan:* {{planName}}\n",
+    sub_status: "*Status:* {{status}}\n",
+    sub_data_remaining: "*Data:* {{remaining}}GB remaining\n",
+    sub_data_unlimited: "*Data:* Unlimited\n",
+    sub_expiry: "*Expires At:* {{date}}\n",
+    sub_not_active: "*Expires At:* Upon activation\n",
+    sub_config: "\n*Connection Link (Tap to copy):*\n`{{config}}`",
+    sub_failed_load: "Failed to load details.",
+    sub_get_config_btn: "Get Config",
+    sub_renew_btn: "Renew Subscription",
+
+    // General
+    generic_error_fetch_pendings: "Error fetching pending transactions."
 };

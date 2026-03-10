@@ -63,13 +63,55 @@ export const fa = {
 
     // Coupons - Checkout
     checkout_apply_coupon_btn: "🎫 اعمال کد تخفیف",
-    checkout_enter_coupon: "لطفاً کد تخفیف خود را وارد کنید یا برای عبور /cancel را بزنید:",
-    checkout_coupon_applied: "✅ کد تخفیف اعمال شد! {{percent}}% تخفیف گرفتید.\nقیمت جدید: ${{price}} USDT",
-    checkout_invalid_coupon_code: "❌ کد تخفیف نامعتبر یا یافت نشد.",
-    checkout_coupon_already_used: "❌ این کد تخفیف قبلاً استفاده شده است.",
-    checkout_coupon_expired: "❌ این کد تخفیف منقضی شده است.",
-    checkout_coupon_not_for_user: "❌ این کد تخفیف متعلق به شما نیست.",
+    checkout_enter_coupon: "لطفاً کد تخفیف خود را وارد کنید یا /cancel را بزنید:",
+    checkout_coupon_applied: "🎉 کد تخفیف اعمال شد! میزان تخفیف: {{percent}}%\nقیمت جدید: ${{price}}",
+    checkout_invalid_coupon_code: "❌ کد تخفیف نامعتبر است. لطفاً دوباره تلاش کنید یا /cancel را بزنید.",
+    checkout_CouponNotFound: "❌ کد تخفیف یافت نشد.",
+    checkout_CouponAlreadyUsed: "❌ این کد تخفیف قبلاً استفاده شده است.",
+    checkout_CouponExpired: "❌ این کد تخفیف منقضی شده است.",
+    checkout_CouponNotForUser: "❌ این کد تخفیف به شما اختصاص داده نشده است.",
+    checkout_error_no_plan: "خطا: هیچ طرحی انتخاب نشده است. لطفاً دوباره تلاش کنید.",
+    checkout_error_plan_not_found: "خطا: طرح مورد نظر پیدا نشد.",
+    checkout_cancel_btn: "❌ لغو",
+    checkout_step1_text: "شما انتخاب کردید: *{{planName}}*\nقیمت: *${{price}} تتر*\n\nلطفاً شبکه مورد نظر برای پرداخت را انتخاب کنید:",
+    checkout_coupon_cancelled: "ورود کد تخفیف لغو شد. لطفاً برای ادامه یک شبکه انتخاب کنید.",
+    checkout_100_discount: "🎉 *تخفیف ۱۰۰٪ اعمال شد!* در حال ساخت اشتراک شما به صورت فوری...",
+    checkout_free_success: "✅ *اشتراک فعال شد!*\n\nتخفیف ۱۰۰٪ شما با موفقیت استفاده شد.\n\n*لینک اتصال شما:*\n`{{config}}`\n\nهمچنین می‌توانید این لینک را در '🛡 اشتراک‌های من' پیدا کنید.",
+    checkout_free_error: "❌ خطای داخلی در ساخت اشتراک شما رخ داده است. لطفاً با پشتیبانی تماس بگیرید و کد تخفیف {{code}} را اعلام کنید.",
+    checkout_select_network: "لطفاً شبکه ترجیحی خود را برای پرداخت (${{price}} تتر) انتخاب کنید:",
+    checkout_click_network_btn: "لطفاً روی یکی از دکمه‌های شبکه کلیک کنید.",
+    checkout_checkout_cancelled: "عملیات پرداخت لغو شد.",
+    checkout_invalid_network: "انتخاب شبکه نامعتبر است.",
+    checkout_payment_instructions: "🏦 *دستورالعمل پرداخت*\n\n*کد پیگیری:* `{{trackId}}`\n\nلطفاً دقیقاً *${{price}} تتر* را از طریق شبکه *{{network}}* به آدرس زیر ارسال کنید:\n\n`{{wallet}}`\n\n_برای کپی آدرس، روی آن ضربه بزنید._\n\n⏳ پس از ارسال پرداخت، **به این پیام با شناسه تراکنش (TXID / Hash) خود پاسخ دهید**.",
+    checkout_send_txid: "لطفاً شناسه تراکنش (TXID) خود را به صورت متن ارسال کنید.",
+    checkout_session_expired: "جلسه منقضی شده است. کاربر یا طرح یافت نشد.",
+    checkout_txid_recorded: "✅ *پرداخت دریافت و ثبت شد!*\n\nمتشکریم. ما شناسه تراکنش شما را به صورت ایمن ذخیره کردیم:\n`{{txid}}`\n\nپرداخت شما (`{{trackId}}`) اکنون **در حال بررسی** است. به محض بررسی توسط ادمین، اشتراک شما به همین صورت ارسال خواهد شد.",
+    checkout_txid_exists: "❌ این شناسه تراکنش قبلاً در سیستم ما ثبت شده است. لطفاً TXID خود را بررسی کنید و دوباره امتحان کنید.",
+    checkout_db_error: "❌ خطای داخلی هنگام ذخیره تراکنش شما رخ داده است. لطفاً با پشتیبانی تماس بگیرید.",
 
-    // Lang
-    lang_changed: "✅ زبان ربات به فارسی تغییر یافت."
+    // Language
+    lang_changed: "✅ زبان ربات به فارسی تغییر یافت.",
+    lang_error_saving: "خطا در ذخیره زبان.",
+    lang_error_changing: "خطا در تغییر زبان.",
+
+    // Subscriptions Panel
+    sub_not_found: "اشتراک یافت نشد.",
+    sub_back_btn: "🔙 بازگشت به لیست",
+    sub_empty_list: "شما هنوز هیچ اشتراکی ندارید. برای شروع روی '🛒 خرید اشتراک' کلیک کنید.",
+    sub_list_header: "در اینجا اشتراک‌های شما قرار دارند. برای مشاهده جزئیات روی یکی کلیک کنید:",
+    sub_details_title: "📦 *جزئیات اشتراک*\n\n",
+    sub_track_id: "*کد پیگیری:* `{{trackId}}`\n",
+    sub_plan: "*طرح:* {{planName}}\n",
+    sub_status: "*وضعیت:* {{status}}\n",
+    sub_data_remaining: "*حجم:* {{remaining}} گیگابایت باقیمانده\n",
+    sub_data_unlimited: "*حجم:* نامحدود\n",
+    sub_expiry: "*تاریخ انقضا:* {{date}}\n",
+    sub_not_active: "*تاریخ انقضا:* پس از فعال‌سازی\n",
+    sub_config: "\n*لینک اتصال (برای کپی ضربه بزنید):*\n`{{config}}`",
+    sub_failed_load: "بارگیری جزئیات با خطا مواجه شد.",
+    sub_get_config_btn: "دریافت کانفیگ",
+    sub_renew_btn: "تمدید مجدد",
+
+    // General
+    generic_error_fetch_pendings: "خطا در دریافت لیست تراکنش‌های در انتظار."
 };

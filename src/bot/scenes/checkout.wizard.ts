@@ -23,14 +23,16 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         // when they enter the scene. We will pass it in the scene state.
         const planId = (ctx.scene.state as any).planId;
 
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
         if (!planId) {
-            await ctx.reply("Error: No plan selected. Please try again.");
+            await ctx.reply(t(lang, 'checkout_error_no_plan'));
             return ctx.scene.leave();
         }
 
         const plan = await PlanService.getPlanById(Number(planId));
         if (!plan) {
-            await ctx.reply("Error: Plan not found.");
+            await ctx.reply(t(lang, 'checkout_error_plan_not_found'));
             return ctx.scene.leave();
         }
 
@@ -40,18 +42,16 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         (ctx.scene.state as any).plan = plan;
         (ctx.scene.state as any).trackId = trackId;
 
-        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
-
         const networkKeyboard = Markup.inlineKeyboard([
             [Markup.button.callback(t(lang, 'checkout_apply_coupon_btn'), 'apply_coupon')],
             [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
             [Markup.button.callback('USDT (ERC20)', 'network_ERC20')],
             [Markup.button.callback('USDT (TON)', 'network_TON')],
-            [Markup.button.callback('❌ Cancel', 'cancel_checkout')]
+            [Markup.button.callback(t(lang, 'checkout_cancel_btn'), 'cancel_checkout')]
         ]);
 
         await ctx.reply(
-            `You selected: *${plan.name}*\nPrice: *$${plan.price_usdt} USDT*\n\nPlease select your preferred network for payment:`,
+            t(lang, 'checkout_step1_text', { planName: plan.name, price: plan.price_usdt.toString() }),
             { parse_mode: 'Markdown', ...networkKeyboard }
         );
 
@@ -68,7 +68,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             const code = ctx.message.text.trim();
             if (code === '/cancel') {
                 state.waitingForCoupon = false;
-                await ctx.reply("Coupon entry cancelled. Please select a network to continue.");
+                await ctx.reply(t(lang, 'checkout_coupon_cancelled'));
                 return; // Re-prompt network on next input
             }
 
@@ -83,22 +83,19 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
 
                 // 100% Free Discount Handling
                 if (discountedPrice === 0) {
-                    await ctx.reply(`🎉 *100% Discount Applied!* Generating your subscription instantly...`, { parse_mode: 'Markdown' });
+                    await ctx.reply(t(lang, 'checkout_100_discount'), { parse_mode: 'Markdown' });
 
                     try {
                         const { subscription } = await SubscriptionService.createFreePurchase(ctx.dbUser!, state.plan, coupon.id);
 
                         await ctx.reply(
-                            `✅ *Subscription Activated!*\n\n` +
-                            `Your 100% discount was successfully redeemed.\n\n` +
-                            `*Your Connection Config:*\n\`${subscription.config_link}\`\n\n` +
-                            `You can also find this link in '🛡 My Subscriptions'.`,
+                            t(lang, 'checkout_free_success', { config: subscription.config_link }),
                             { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
                         );
                         return ctx.scene.leave();
                     } catch (e: any) {
                         logger.error(`Error generating free subscription: ${e.message}`);
-                        await ctx.reply(`❌ Internal error generating your subscription. Please contact support and mention coupon code ${code}.`);
+                        await ctx.reply(t(lang, 'checkout_free_error', { code: code }));
                         return ctx.scene.leave();
                     }
                 }
@@ -110,9 +107,9 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                     [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
                     [Markup.button.callback('USDT (ERC20)', 'network_ERC20')],
                     [Markup.button.callback('USDT (TON)', 'network_TON')],
-                    [Markup.button.callback('❌ Cancel', 'cancel_checkout')]
+                    [Markup.button.callback(t(lang, 'checkout_cancel_btn'), 'cancel_checkout')]
                 ]);
-                await ctx.reply(`Please select your preferred network for payment ($${discountedPrice.toFixed(2)} USDT):`, networkKeyboard);
+                await ctx.reply(t(lang, 'checkout_select_network', { price: discountedPrice.toFixed(2) }), networkKeyboard);
                 return;
             } catch (e: any) {
                 state.waitingForCoupon = false;
@@ -125,7 +122,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         }
 
         if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
-            await ctx.reply("Please click one of the network buttons.");
+            await ctx.reply(t(lang, 'checkout_click_network_btn'));
             return;
         }
 
@@ -139,13 +136,13 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         }
 
         if (action === 'cancel_checkout') {
-            await ctx.reply("Checkout cancelled.");
+            await ctx.reply(t(lang, 'checkout_checkout_cancelled'));
             await ctx.answerCbQuery();
             return ctx.scene.leave();
         }
 
         if (!action.startsWith('network_')) {
-            await ctx.reply("Invalid network selection.");
+            await ctx.reply(t(lang, 'checkout_invalid_network'));
             return;
         }
 
@@ -159,12 +156,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
 
         await ctx.answerCbQuery();
         await ctx.reply(
-            `🏦 *Payment Instructions*\n\n` +
-            `*Track ID:* \`${trackId}\`\n\n` +
-            `Please send exactly *$${Number(finalPrice).toFixed(2)} USDT* via *${network}* network to the following address:\n\n` +
-            `\`${walletAddress}\`\n\n` +
-            `_Tap the address above to copy it._\n\n` +
-            `⏳ Once you have sent the payment, please **reply to this message** with your **Transaction ID (TXID) / Hash**.`,
+            t(lang, 'checkout_payment_instructions', { trackId, price: Number(finalPrice).toFixed(2), network, wallet: walletAddress }),
             { parse_mode: 'Markdown' }
         );
 
@@ -173,8 +165,10 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
 
     // Step 3: Receive TXID
     async (ctx) => {
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
         if (!ctx.message || !('text' in ctx.message)) {
-            await ctx.reply("Please send your Transaction ID (TXID) as text.");
+            await ctx.reply(t(lang, 'checkout_send_txid'));
             return;
         }
 
@@ -189,6 +183,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
 
             if (!user || !plan || !trackId) {
                 throw new Error("Session expired. Missing user or plan.");
+                // Error boundary will catch and translate
             }
 
             const finalPrice = state.finalPrice ?? plan.price_usdt;
@@ -197,20 +192,22 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             await SubscriptionService.createPendingPurchase(user, plan, txid, trackId, finalPrice, state.coupon_id);
 
             await ctx.reply(
-                `✅ *Payment Received & Recorded!*\n\n` +
-                `Thank you. We have securely saved your TXID:\n\`${txid}\`\n\n` +
-                `Your payment (\`${trackId}\`) is now **Processing**. Once an admin verifies the hash (or it auto-confirms), your VPN configuration will be delivered here automatically.`,
+                t(lang, 'checkout_txid_recorded', { txid, trackId }),
                 { parse_mode: 'Markdown' }
             );
         } catch (e: any) {
             logger.error(`Checkout Wizard Error Saving TXID: ${e.message}`);
             // If they provided a duplicate TX hash, we will let them know
             if (e.message.includes("already exists")) {
-                await ctx.reply("❌ That Transaction ID has already been submitted in our system. Please check your TXID and try again.");
+                await ctx.reply(t(lang, 'checkout_txid_exists'));
                 // Re-ask for TXID by not leaving the scene
                 return;
             }
-            await ctx.reply("❌ An internal database error occurred while saving your transaction. Please contact support.");
+            if (e.message.includes("Session expired")) {
+                await ctx.reply(t(lang, 'checkout_session_expired'));
+            } else {
+                await ctx.reply(t(lang, 'checkout_db_error'));
+            }
         }
 
         return ctx.scene.leave();

@@ -93,7 +93,8 @@ const handlePendingSubs = async (ctx: any) => {
         }
     } catch (e) {
         logger.error("Error fetching pendings", e);
-        await ctx.reply("Error fetching pending transactions.");
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+        await ctx.reply(t(lang, 'generic_error_fetch_pendings'));
     }
 };
 
@@ -222,7 +223,8 @@ bot.action(/set_lang_(.*)/, async (ctx) => {
 
     } catch (e) {
         logger.error("Lang select error", e);
-        await ctx.answerCbQuery("Error saving language.");
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+        await ctx.answerCbQuery(t(lang, 'lang_error_saving'));
     }
 });
 
@@ -289,7 +291,8 @@ bot.action('toggle_lang', async (ctx) => {
 
     } catch (e: any) {
         logger.error(`Lang Switch Error: ${e.message}`);
-        await ctx.answerCbQuery("Error changing language.");
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+        await ctx.answerCbQuery(t(lang, 'lang_error_changing'));
     }
 });
 
@@ -336,43 +339,44 @@ bot.action(/manage_sub_(\d+)/, async (ctx) => {
 
     try {
         const sub = await SubscriptionService.getSubscriptionById(subId, ctx.dbUser.id);
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
 
         if (!sub) {
-            await ctx.answerCbQuery("Subscription not found.");
+            await ctx.answerCbQuery(t(lang, 'sub_not_found'));
             return;
         }
 
         await ctx.answerCbQuery();
 
-        let message = `📦 *Subscription Details*\n\n`;
-        message += `*Track ID:* \`${sub.track_id}\`\n`;
-        message += `*Plan:* ${sub.plan.name}\n`;
-        message += `*Status:* ${sub.status.toUpperCase()}\n`;
+        let message = t(lang, 'sub_details_title');
+        message += t(lang, 'sub_track_id', { trackId: sub.track_id });
+        message += t(lang, 'sub_plan', { planName: sub.plan.name });
+        message += t(lang, 'sub_status', { status: sub.status.toUpperCase() });
 
         if (sub.status === 'pending') {
-            message += `\n_Your payment is currently being reviewed. Your config will appear here once approved._`;
+            message += `\n_Your payment is currently being reviewed._\n`;
         } else if (sub.status === 'active' || sub.status === 'expired') {
-            message += `*Data Remaining:* ${sub.remaining_data_gb} GB\n`;
-            message += `*Expiry:* ${sub.expiry_date ? sub.expiry_date.toLocaleDateString() : 'N/A'}\n\n`;
+            message += t(lang, 'sub_data_remaining', { remaining: sub.remaining_data_gb.toString() });
+            message += sub.expiry_date ? t(lang, 'sub_expiry', { date: sub.expiry_date.toLocaleDateString() }) : t(lang, 'sub_not_active');
+            message += `\n`;
 
             if (sub.config_link) {
-                // In HTML mode, we can format the config link as a monospaced block for easy copying
-                message += `*Your Connection Config:*\n\`${sub.config_link}\``;
+                message += t(lang, 'sub_config', { config: sub.config_link });
             } else {
                 message += `_Config link not assigned yet._`;
             }
         }
 
-        // Future enhancements: Add a "Refresh Config" or "Reset UUID" button here
         const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('🔙 Back to List', 'list_subs')]
+            [Markup.button.callback(t(lang, 'sub_back_btn'), 'list_subs')]
         ]);
 
         await ctx.reply(message, { parse_mode: 'Markdown', ...keyboard });
 
     } catch (e) {
         logger.error(`Error fetching sub ${subId}`, e);
-        await ctx.answerCbQuery("Failed to load details.");
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+        await ctx.answerCbQuery(t(lang, 'sub_failed_load'));
     }
 });
 
@@ -383,10 +387,11 @@ bot.action('list_subs', async (ctx) => {
     // Since ctx.message.text won't exist in a callback query, we just copy the logic
     try {
         if (!ctx.dbUser) return;
+        const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
         const subs = await SubscriptionService.getUserSubscriptions(ctx.dbUser.id);
 
         if (subs.length === 0) {
-            return ctx.editMessageText("You don't have any subscriptions yet. Click '🛒 Buy Plan' to get started.");
+            return ctx.editMessageText(t(lang, 'sub_empty_list'));
         }
 
         const buttons = subs.map(sub => {
@@ -395,7 +400,7 @@ bot.action('list_subs', async (ctx) => {
             return [Markup.button.callback(label, `manage_sub_${sub.id}`)];
         });
 
-        await ctx.editMessageText("Here are your subscriptions. Click on one to view details:", Markup.inlineKeyboard(buttons));
+        await ctx.editMessageText(t(lang, 'sub_list_header'), Markup.inlineKeyboard(buttons));
     } catch (e) {
         logger.error("Error refreshing subs", e);
     }
