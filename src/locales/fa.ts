@@ -35,6 +35,22 @@ export const fa = {
     invite_success: "لینک دعوت شما:\n\n🔗 <a href=\"{{link}}\">{{link}}</a>\n\n<i>توجه: این لینک فقط توسط یک نفر قابل استفاده است.</i>",
     invite_error: "ساخت لینک دعوت با خطا مواجه شد. لطفاً بعداً دوباره تلاش کنید.",
 
+    // Coupons - Admin
+    admin_coupon_btn: "🎫 ساخت کد تخفیف",
+    admin_coupon_percent: "درصد تخفیف را وارد کنید (مثلاً ۲۰) یا /cancel را بزنید:",
+    admin_coupon_hours: "زمان انقضا به ساعت را وارد کنید (مثلاً ۲۴) یا /cancel را بزنید:",
+    admin_coupon_success: "🎉 کد تخفیف ساخته شد!\nکد: `{{code}}`\nتخفیف: {{percent}}%\nانقضا در: {{hours}} ساعت.",
+    admin_coupon_invalid: "ورودی نامعتبر است. لطفاً یک عدد معتبر وارد کنید.",
+
+    // Coupons - Checkout
+    checkout_apply_coupon_btn: "🎫 اعمال کد تخفیف",
+    checkout_enter_coupon: "لطفاً کد تخفیف خود را وارد کنید یا برای عبور /cancel را بزنید:",
+    checkout_coupon_applied: "✅ کد تخفیف اعمال شد! {{percent}}% تخفیف گرفتید.\nقیمت جدید: ${{price}} USDT",
+    checkout_invalid_coupon_code: "❌ کد تخفیف نامعتبر یا یافت نشد.",
+    checkout_coupon_already_used: "❌ این کد تخفیف قبلاً استفاده شده است.",
+    checkout_coupon_expired: "❌ این کد تخفیف منقضی شده است.",
+    checkout_coupon_not_for_user: "❌ این کد تخفیف متعلق به شما نیست.",
+
     // Lang
     lang_changed: "✅ زبان ربات به فارسی تغییر یافت."
 };

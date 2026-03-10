@@ -13,7 +13,7 @@ export class SubscriptionService {
     /**
      * Creates a pending subscription and a linked pending transaction for a user purchasing a plan.
      */
-    static async createPendingPurchase(user: User, plan: Plan, txHash: string, trackId: string): Promise<{ subscription: Subscription, transaction: Transaction }> {
+    static async createPendingPurchase(user: User, plan: Plan, txHash: string, trackId: string, finalUsdtAmount: number, couponId?: number): Promise<{ subscription: Subscription, transaction: Transaction }> {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -38,6 +38,10 @@ export class SubscriptionService {
             // but we can initialize data to plan structure.
             sub.remaining_data_gb = plan.volume_gb;
 
+            if (couponId) {
+                sub.coupon_id = couponId;
+            }
+
             const savedSub = await queryRunner.manager.save(sub);
 
             // 2. Create the Pending Transaction
@@ -45,7 +49,7 @@ export class SubscriptionService {
             tx.user_id = user.id;
             tx.sub_id = savedSub.id;
             tx.tx_hash = txHash;
-            tx.amount = plan.price_usdt;
+            tx.amount = finalUsdtAmount;
             tx.track_id = trackId; // Keep them unified
             tx.status = 'pending';
 
@@ -112,7 +116,7 @@ export class SubscriptionService {
      */
     static async approveSubscription(subId: number): Promise<Subscription> {
         return await AppDataSource.transaction(async manager => {
-            const sub = await manager.findOne(Subscription, { where: { id: subId }, relations: ['plan', 'user'] });
+            const sub = await manager.findOne(Subscription, { where: { id: subId }, relations: ['plan', 'user', 'coupon'] });
             if (!sub) throw new Error("Subscription not found");
             if (sub.status !== 'pending') throw new Error(`Cannot approve a subscription with status: ${sub.status}`);
 
@@ -138,6 +142,11 @@ export class SubscriptionService {
             sub.expiry_date = expiry;
 
             tx.status = 'confirmed';
+
+            if (sub.coupon) {
+                sub.coupon.is_used = true;
+                await manager.save(sub.coupon);
+            }
 
             await manager.save(sub);
             await manager.save(tx);

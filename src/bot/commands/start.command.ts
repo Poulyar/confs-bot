@@ -30,11 +30,16 @@ export const startCommand = async (ctx: CustomContext) => {
 
 export const adminCommand = async (ctx: CustomContext) => {
     const user = ctx.dbUser;
+    const lang = (user?.language as SupportedLanguage) || 'en';
 
     if (!user?.is_admin) {
         await ctx.reply('You do not have permission to use this command.');
         return;
     }
 
-    await ctx.reply('Admin Panel:\nUse /generate_invites [amount] to create new codes.');
+    const kb = Markup.inlineKeyboard([
+        [Markup.button.callback(t(lang, 'admin_coupon_btn'), 'generate_coupon')]
+    ]);
+
+    await ctx.reply('Admin Panel Flow:\n\nSelect an administration wizard:', kb);
 };

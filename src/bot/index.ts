@@ -11,6 +11,7 @@ import { SubscriptionService } from '../services/subscription.service';
 import { Markup } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { checkoutWizard } from './scenes/checkout.wizard';
+import { adminCouponWizard } from './scenes/admin-coupon.wizard';
 import { en } from '../locales/en';
 import { fa } from '../locales/fa';
 import { t, SupportedLanguage } from '../locales';
@@ -39,12 +40,18 @@ bot.use(session());
 bot.use(authMiddleware);
 
 // Setup scenes (This must come AFTER authMiddleware so scenes have ctx.dbUser)
-const stage = new Scenes.Stage<CustomContext>([checkoutWizard]);
+const stage = new Scenes.Stage<CustomContext>([checkoutWizard, adminCouponWizard]);
 bot.use(stage.middleware());
 
 // Register Commands
 bot.start(startCommand);
 bot.command('admin', adminCommand);
+
+bot.action('generate_coupon', async (ctx) => {
+    if (!ctx.dbUser?.is_admin) return;
+    await ctx.scene.enter('ADMIN_COUPON_WIZARD');
+    await ctx.answerCbQuery();
+});
 
 // Handle Admin /pending command
 bot.command('pending', async (ctx) => {

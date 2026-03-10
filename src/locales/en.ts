@@ -35,6 +35,22 @@ export const en = {
     invite_success: "Here is your invite link:\n\n🔗 <a href=\"{{link}}\">{{link}}</a>\n\n<i>Note: This link can only be used by one person.</i>",
     invite_error: "Failed to generate invite. Please try again later.",
 
+    // Coupons - Admin
+    admin_coupon_btn: "🎫 Generate Coupon",
+    admin_coupon_percent: "Enter discount percentage (e.g., 20) or type /cancel:",
+    admin_coupon_hours: "Enter expiry time in hours (e.g., 24) or type /cancel:",
+    admin_coupon_success: "🎉 Coupon created!\nCode: `{{code}}`\nDiscount: {{percent}}%\nExpires In: {{hours}} hours.",
+    admin_coupon_invalid: "Invalid input. Please enter a valid number.",
+
+    // Coupons - Checkout
+    checkout_apply_coupon_btn: "🎫 Apply Coupon",
+    checkout_enter_coupon: "Please enter your coupon code or type /cancel to skip:",
+    checkout_coupon_applied: "✅ Coupon applied! You got {{percent}}% off.\nNew price: ${{price}} USDT",
+    checkout_invalid_coupon_code: "❌ Invalid or non-existent coupon.",
+    checkout_coupon_already_used: "❌ This coupon has already been used.",
+    checkout_coupon_expired: "❌ This coupon has expired.",
+    checkout_coupon_not_for_user: "❌ This coupon isn't assigned to you.",
+
     // Lang
     lang_changed: "✅ Language has been changed to English."
 };

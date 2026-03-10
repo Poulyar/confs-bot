@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { User } from './User';
 import { Plan } from './Plan';
+import { Coupon } from './Coupon';
 
 @Entity('subscriptions')
 export class Subscription {
@@ -23,6 +24,13 @@ export class Subscription {
 
     @Column()
     plan_id: number;
+
+    @ManyToOne(() => Coupon, { nullable: true })
+    @JoinColumn({ name: 'coupon_id' })
+    coupon: Coupon;
+
+    @Column({ nullable: true })
+    coupon_id: number;
 
     @Column({ type: 'text', unique: true, nullable: true })
     napster_config_id: string; // Remote UUID in VPN Panel

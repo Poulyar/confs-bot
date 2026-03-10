@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './User';
+import { Subscription } from './Subscription';
 
 @Entity('coupons')
 export class Coupon {
@@ -25,4 +26,7 @@ export class Coupon {
 
     @Column({ type: 'timestamp', nullable: true })
     expiry_date: Date;
+
+    @OneToMany(() => Subscription, (sub) => sub.coupon)
+    subscriptions: Subscription[];
 }

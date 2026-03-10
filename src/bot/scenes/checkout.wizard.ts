@@ -2,7 +2,9 @@ import { Scenes, Markup } from 'telegraf';
 import { CustomContext } from '../../types';
 import { PlanService } from '../../services/plan.service';
 import { SubscriptionService } from '../../services/subscription.service';
+import { CouponService } from '../../services/coupon.service';
 import { logger } from '../../utils/logger';
+import { t, SupportedLanguage } from '../../locales';
 
 // Hardcoded Dummy Wallets for now
 const WALLETS = {
@@ -38,7 +40,10 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         (ctx.scene.state as any).plan = plan;
         (ctx.scene.state as any).trackId = trackId;
 
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
         const networkKeyboard = Markup.inlineKeyboard([
+            [Markup.button.callback(t(lang, 'checkout_apply_coupon_btn'), 'apply_coupon')],
             [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
             [Markup.button.callback('USDT (ERC20)', 'network_ERC20')],
             [Markup.button.callback('USDT (TON)', 'network_TON')],
@@ -53,14 +58,63 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
         return ctx.wizard.next();
     },
 
-    // Step 2: Handle Network Selection & Ask for TXID
+    // Step 2: Handle Network Selection OR Ask for Coupon
     async (ctx) => {
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+        const state = ctx.scene.state as any;
+
+        // If we are currently waiting for the user to type a coupon code
+        if (state.waitingForCoupon && ctx.message && 'text' in ctx.message) {
+            const code = ctx.message.text.trim();
+            if (code === '/cancel') {
+                state.waitingForCoupon = false;
+                await ctx.reply("Coupon entry cancelled. Please select a network to continue.");
+                return; // Re-prompt network on next input
+            }
+
+            try {
+                const coupon = await CouponService.validateCoupon(code, ctx.dbUser?.id);
+                state.coupon_id = coupon.id;
+                state.discount_percent = coupon.discount_percent;
+                state.waitingForCoupon = false;
+
+                const discountedPrice = state.plan.price_usdt * (1 - coupon.discount_percent / 100);
+                state.finalPrice = discountedPrice;
+
+                await ctx.reply(t(lang, 'checkout_coupon_applied', { percent: coupon.discount_percent.toString(), price: discountedPrice.toFixed(2) }));
+
+                // Show network keyboard again, without coupon button
+                const networkKeyboard = Markup.inlineKeyboard([
+                    [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
+                    [Markup.button.callback('USDT (ERC20)', 'network_ERC20')],
+                    [Markup.button.callback('USDT (TON)', 'network_TON')],
+                    [Markup.button.callback('❌ Cancel', 'cancel_checkout')]
+                ]);
+                await ctx.reply(`Please select your preferred network for payment ($${discountedPrice.toFixed(2)} USDT):`, networkKeyboard);
+                return;
+            } catch (e: any) {
+                state.waitingForCoupon = false;
+                const errKey = `checkout_${e.message}` as any;
+                // If translation exists, use it, otherwise generic error
+                const errMsg = t(lang, errKey) !== errKey ? t(lang, errKey) : t(lang, 'checkout_invalid_coupon_code');
+                await ctx.reply(errMsg);
+                return; // Re-prompt next loop
+            }
+        }
+
         if (!ctx.callbackQuery || !('data' in ctx.callbackQuery)) {
             await ctx.reply("Please click one of the network buttons.");
             return;
         }
 
         const action = ctx.callbackQuery.data;
+
+        if (action === 'apply_coupon') {
+            state.waitingForCoupon = true;
+            await ctx.answerCbQuery();
+            await ctx.reply(t(lang, 'checkout_enter_coupon'));
+            return; // stay on this step to receive text next loop
+        }
 
         if (action === 'cancel_checkout') {
             await ctx.reply("Checkout cancelled.");
@@ -75,16 +129,17 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
 
         const network = action.split('_')[1] as keyof typeof WALLETS;
         const walletAddress = WALLETS[network];
-        const plan = (ctx.scene.state as any).plan;
-        const trackId = (ctx.scene.state as any).trackId;
+        const plan = state.plan;
+        const trackId = state.trackId;
+        const finalPrice = state.finalPrice ?? plan.price_usdt;
 
-        (ctx.scene.state as any).network = network;
+        state.network = network;
 
         await ctx.answerCbQuery();
         await ctx.reply(
             `🏦 *Payment Instructions*\n\n` +
             `*Track ID:* \`${trackId}\`\n\n` +
-            `Please send exactly *$${plan.price_usdt} USDT* via *${network}* network to the following address:\n\n` +
+            `Please send exactly *$${Number(finalPrice).toFixed(2)} USDT* via *${network}* network to the following address:\n\n` +
             `\`${walletAddress}\`\n\n` +
             `_Tap the address above to copy it._\n\n` +
             `⏳ Once you have sent the payment, please **reply to this message** with your **Transaction ID (TXID) / Hash**.`,
@@ -114,8 +169,10 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                 throw new Error("Session expired. Missing user or plan.");
             }
 
+            const finalPrice = state.finalPrice ?? plan.price_usdt;
+
             // Call the service to save to Postgres
-            await SubscriptionService.createPendingPurchase(user, plan, txid, trackId);
+            await SubscriptionService.createPendingPurchase(user, plan, txid, trackId, finalPrice, state.coupon_id);
 
             await ctx.reply(
                 `✅ *Payment Received & Recorded!*\n\n` +

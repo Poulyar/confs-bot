@@ -24,7 +24,8 @@ export class VpnService {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            }
+            },
+            withCredentials: true
         });
 
         // Interceptor to inject the session cookie on every request
@@ -108,7 +109,9 @@ export class VpnService {
                 settings: JSON.stringify({ clients: [clientData] })
             };
 
-            const response = await this.api.post('/panel/inbound/addClient', payload);
+            console.log("payload", payload)
+
+            const response = await this.api.post('/panel/api/inbounds/addClient', payload);
 
             if (response.data.success) {
                 // Return the formatted connection string (Assuming VLESS for this implementation)
