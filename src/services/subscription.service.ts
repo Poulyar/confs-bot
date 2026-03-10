@@ -112,7 +112,40 @@ export class SubscriptionService {
     }
 
     /**
-     * Admin approves a subscription. Marks it active, generates a dummy config, and sets expiry.
+     * Internal generic method to provision a subscription on the VPN server,
+     * set the active flag, save it to DB, construct a success message, and burn the coupon.
+     */
+    private static async provisionSubscription(sub: Subscription, manager: any): Promise<Subscription> {
+        // Set Expiry Date based on plan duration
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + sub.plan.duration_days);
+
+        // Generate real config using 3X-UI
+        const email = `user_${sub.user_id}_sub_${sub.id}`;
+        const limitGb = sub.plan.volume_gb;
+        const expiryMs = expiry.getTime(); // 3X-UI uses epoch milliseconds
+
+        const realConfig = await VpnService.createClient(email, limitGb, expiryMs);
+        if (!realConfig) {
+            throw new Error("Failed to generate real VPN configuration from 3X-UI panel.");
+        }
+
+        sub.status = 'active';
+        sub.config_link = realConfig;
+        sub.expiry_date = expiry;
+
+        // Burn the coupon if exists
+        if (sub.coupon) {
+            sub.coupon.is_used = true;
+            await manager.save(sub.coupon);
+        }
+
+        const updatedSub = await manager.save(sub);
+        return updatedSub;
+    }
+
+    /**
+     * Admin approves a pending subscription. Marks it active, generates config, and sets expiry.
      */
     static async approveSubscription(subId: number): Promise<Subscription> {
         return await AppDataSource.transaction(async manager => {
@@ -123,35 +156,52 @@ export class SubscriptionService {
             const tx = await manager.findOne(Transaction, { where: { sub_id: subId } });
             if (!tx) throw new Error("Transaction not found");
 
-            // Set Expiry Date based on plan duration
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + sub.plan.duration_days);
-
-            // Generate real config using 3X-UI
-            const email = `user_${sub.user_id}_sub_${sub.id}`;
-            const limitGb = sub.plan.volume_gb;
-            const expiryMs = expiry.getTime(); // 3X-UI uses epoch milliseconds
-
-            const realConfig = await VpnService.createClient(email, limitGb, expiryMs);
-            if (!realConfig) {
-                throw new Error("Failed to generate real VPN configuration from 3X-UI panel.");
-            }
-
-            sub.status = 'active';
-            sub.config_link = realConfig;
-            sub.expiry_date = expiry;
-
             tx.status = 'confirmed';
-
-            if (sub.coupon) {
-                sub.coupon.is_used = true;
-                await manager.save(sub.coupon);
-            }
-
-            await manager.save(sub);
             await manager.save(tx);
 
-            return sub;
+            return await this.provisionSubscription(sub, manager);
+        });
+    }
+
+    /**
+     * Bypasses the crypto generation logic entirely. Directly activates a subscription when a 100% coupon is applied.
+     */
+    static async createFreePurchase(user: User, plan: Plan, couponId: number): Promise<{ subscription: Subscription, transaction: Transaction }> {
+        return await AppDataSource.transaction(async manager => {
+            // 1. Create Active Subscription Entity Shell
+            let sub = new Subscription();
+            sub.user_id = user.id;
+            sub.plan_id = plan.id;
+            sub.status = 'pending';
+
+            // Generate a random 8-character alphanumeric track ID
+            sub.track_id = 'FREE-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            sub.remaining_data_gb = plan.volume_gb;
+            sub.coupon_id = couponId;
+
+            sub = await manager.save(sub);
+
+            // Re-fetch with relations to pass to provisionSubscription
+            let reloadedSub = await manager.findOne(Subscription, { where: { id: sub.id }, relations: ['plan', 'coupon'] });
+
+            // 2. Create Confirmed Transaction Entity
+            const tx = new Transaction();
+            tx.user_id = user.id;
+            tx.sub_id = sub.id;
+            tx.tx_hash = `COUPON_100_${couponId}_${Date.now()}`;
+            tx.amount = 0;
+            tx.track_id = sub.track_id;
+            tx.status = 'confirmed';
+
+            const savedTx = await manager.save(tx);
+
+            // 3. Provision Reality
+            const activatedSub = await this.provisionSubscription(reloadedSub!, manager);
+
+            return {
+                subscription: activatedSub,
+                transaction: savedTx
+            };
         });
     }
 

@@ -81,6 +81,28 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                 const discountedPrice = state.plan.price_usdt * (1 - coupon.discount_percent / 100);
                 state.finalPrice = discountedPrice;
 
+                // 100% Free Discount Handling
+                if (discountedPrice === 0) {
+                    await ctx.reply(`🎉 *100% Discount Applied!* Generating your subscription instantly...`, { parse_mode: 'Markdown' });
+
+                    try {
+                        const { subscription } = await SubscriptionService.createFreePurchase(ctx.dbUser!, state.plan, coupon.id);
+
+                        await ctx.reply(
+                            `✅ *Subscription Activated!*\n\n` +
+                            `Your 100% discount was successfully redeemed.\n\n` +
+                            `*Your Connection Config:*\n\`${subscription.config_link}\`\n\n` +
+                            `You can also find this link in '🛡 My Subscriptions'.`,
+                            { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
+                        );
+                        return ctx.scene.leave();
+                    } catch (e: any) {
+                        logger.error(`Error generating free subscription: ${e.message}`);
+                        await ctx.reply(`❌ Internal error generating your subscription. Please contact support and mention coupon code ${code}.`);
+                        return ctx.scene.leave();
+                    }
+                }
+
                 await ctx.reply(t(lang, 'checkout_coupon_applied', { percent: coupon.discount_percent.toString(), price: discountedPrice.toFixed(2) }));
 
                 // Show network keyboard again, without coupon button
