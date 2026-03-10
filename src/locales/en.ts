@@ -4,6 +4,7 @@ export const en = {
     free_trial_btn: "🎁 Free Trial",
     my_subs_btn: "🛡 My Subscriptions",
     profile_btn: "👤 Profile",
+    invite_link_btn: "🔗 Generate Invite Link",
     setup_guide_btn: "📚 Setup Guide",
     support_btn: "💬 Support",
     change_lang_btn: "🌍 Farsi / Farsi",
@@ -28,6 +29,11 @@ export const en = {
     // Subs
     no_subs_yet: "You don't have any subscriptions yet. Click '🛒 Buy Plan' to get started.",
     here_are_subs: "Here are your subscriptions. Click on one to view details:",
+
+    // Invites
+    invite_generating: "Generating your unique invite link...",
+    invite_success: "Here is your invite link:\n\n🔗 <a href=\"{{link}}\">{{link}}</a>\n\n<i>Note: This link can only be used by one person.</i>",
+    invite_error: "Failed to generate invite. Please try again later.",
 
     // Lang
     lang_changed: "✅ Language has been changed to English."

@@ -4,6 +4,7 @@ export const fa = {
     free_trial_btn: "🎁 تست رایگان",
     my_subs_btn: "🛡 اشتراک‌های من",
     profile_btn: "👤 پروفایل",
+    invite_link_btn: "🔗 دریافت لینک دعوت",
     setup_guide_btn: "📚 راهنمای اتصال",
     support_btn: "💬 پشتیبانی",
     change_lang_btn: "🌍 English / انگلیسی",
@@ -28,6 +29,11 @@ export const fa = {
     // Subs
     no_subs_yet: "شما هنوز هیچ اشتراکی ندارید. برای شروع روی '🛒 خرید اشتراک' کلیک کنید.",
     here_are_subs: "اشتراک‌های شما در زیر آمده است. برای مشاهده جزئیات روی یکی از آن‌ها کلیک کنید:",
+
+    // Invites
+    invite_generating: "در حال ساخت لینک دعوت اختصاصی شما...",
+    invite_success: "لینک دعوت شما:\n\n🔗 <a href=\"{{link}}\">{{link}}</a>\n\n<i>توجه: این لینک فقط توسط یک نفر قابل استفاده است.</i>",
+    invite_error: "ساخت لینک دعوت با خطا مواجه شد. لطفاً بعداً دوباره تلاش کنید.",
 
     // Lang
     lang_changed: "✅ زبان ربات به فارسی تغییر یافت."

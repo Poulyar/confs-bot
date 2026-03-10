@@ -179,7 +179,7 @@ bot.action(/set_lang_(.*)/, async (ctx) => {
         // Let's drop them straight into the main menu keyboard using their new lang
         const keyboard = Markup.keyboard([
             [t(selectedLang, 'buy_plan_btn'), t(selectedLang, 'my_subs_btn')],
-            [t(selectedLang, 'free_trial_btn'), '🔗 Generate Invite Link'],
+            [t(selectedLang, 'free_trial_btn'), t(selectedLang, 'invite_link_btn')],
             [t(selectedLang, 'setup_guide_btn'), t(selectedLang, 'profile_btn')],
             [t(selectedLang, 'support_btn')]
         ]).resize();
@@ -232,7 +232,7 @@ bot.action('toggle_lang', async (ctx) => {
         // Update main reply keyboard 
         const rootKeyboard = Markup.keyboard([
             [t(newLang, 'buy_plan_btn'), t(newLang, 'my_subs_btn')],
-            [t(newLang, 'free_trial_btn'), '🔗 Generate Invite Link'],
+            [t(newLang, 'free_trial_btn'), t(newLang, 'invite_link_btn')],
             [t(newLang, 'setup_guide_btn'), t(newLang, 'profile_btn')],
             [t(newLang, 'support_btn')]
         ]).resize();
@@ -373,14 +373,15 @@ bot.action('list_subs', async (ctx) => {
 });
 
 // Handle "Generate Invite Link" button click
-bot.hears('🔗 Generate Invite Link', async (ctx) => {
+bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {
     if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
 
     try {
         // Here you could add logic to limit how many invites a user can generate
         // For example: check ctx.dbUser.codes_created.length if we loaded the relation
 
-        await ctx.reply('Generating your unique invite link...');
+        await ctx.reply(t(lang, 'invite_generating'));
 
         const codes = await UserService.generateInvitationCode(ctx.dbUser.id, 1);
         if (codes.length === 0) throw new Error("Code generation failed");
@@ -390,12 +391,12 @@ bot.hears('🔗 Generate Invite Link', async (ctx) => {
         const link = `https://t.me/${botInfo.username}?start=${code.code}`;
 
         await ctx.reply(
-            `Here is your invite link:\n\n🔗 <a href="${link}">${link}</a>\n\n<i>Note: This link can only be used by one person.</i>`,
-            { parse_mode: 'HTML' }
+            t(lang, 'invite_success', { link: link }),
+            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } }
         );
     } catch (e) {
         logger.error("Error generating user invite", e);
-        await ctx.reply("Failed to generate invite. Please try again later.");
+        await ctx.reply(t(lang, 'invite_error'));
     }
 });
 
