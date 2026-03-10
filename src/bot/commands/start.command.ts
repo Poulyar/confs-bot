@@ -33,7 +33,7 @@ export const adminCommand = async (ctx: CustomContext) => {
     const lang = (user?.language as SupportedLanguage) || 'en';
 
     if (!user?.is_admin) {
-        await ctx.reply('You do not have permission to use this command.');
+        await ctx.reply(t(lang, 'admin_unauthorized'));
         return;
     }
 
@@ -42,5 +42,5 @@ export const adminCommand = async (ctx: CustomContext) => {
         [Markup.button.callback(t(lang, 'admin_pending_btn'), 'admin_pending_subs')]
     ]);
 
-    await ctx.reply('Admin Panel Flow:\n\nSelect an administration wizard:', kb);
+    await ctx.reply(t(lang, 'admin_panel_title'), kb);
 };

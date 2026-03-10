@@ -36,6 +36,15 @@ export const en = {
     invite_error: "Failed to generate invite. Please try again later.",
 
     // Coupons - Admin
+    admin_unauthorized: "You do not have permission to use this command.",
+    admin_panel_title: "Admin Panel Flow:\n\nSelect an administration wizard:",
+    admin_invites_generated: "Generated {{count}} invitation codes:\n\n{{codes}}",
+    admin_invites_failed: "Failed to generate codes.",
+    admin_approve_success: "✅ *Approved: Track ID {{trackId}}*\nHash has been verified and user notified.",
+    admin_reject_success: "❌ *Rejected: Track ID {{trackId}}*\nTransaction was rejected and user notified.",
+    admin_approve_user_dm: "🎉 *Payment Approved!*\n\nYour transaction ({{trackId}}) has been verified.\n\n*Your Connection Config:*\n`{{config}}`\n\nYou can also find this link in '🛡 My Subscriptions'.",
+    admin_reject_user_dm: "🚫 *Payment Rejected*\n\nYour transaction ({{trackId}}) could not be verified by our team. If you believe this is an error, please contact support and provide your hash.",
+
     admin_coupon_btn: "🎫 Generate Coupon",
     admin_pending_btn: "⏳ Review Pending Subs",
     admin_coupon_percent: "Enter discount percentage (e.g., 20) or type /cancel:",

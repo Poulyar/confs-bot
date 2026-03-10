@@ -10,7 +10,7 @@ export function t(lang: SupportedLanguage, key: TranslationKey, params: Record<s
     let text = dictionaries[lang][key] || dictionaries['en'][key];
 
     for (const [k, v] of Object.entries(params)) {
-        text = text.replace(`{{${k}}}`, v.toString());
+        text = text.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
     }
 
     return text;

@@ -54,9 +54,11 @@ bot.action('generate_coupon', async (ctx) => {
 });
 
 const handlePendingSubs = async (ctx: any) => {
+    const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
     if (!ctx.dbUser?.is_admin) {
-        if (ctx.callbackQuery) await ctx.answerCbQuery("Unauthorized", { show_alert: true });
-        else await ctx.reply("Unauthorized.");
+        if (ctx.callbackQuery) await ctx.answerCbQuery(t(lang, 'admin_unauthorized'), { show_alert: true });
+        else await ctx.reply(t(lang, 'admin_unauthorized'));
         return;
     }
 
@@ -102,15 +104,19 @@ bot.action('admin_pending_subs', handlePendingSubs);
 bot.action(/approve_tx_(\d+)/, async (ctx) => {
     if (!ctx.dbUser?.is_admin) return;
     const subId = parseInt(ctx.match[1], 10);
+    const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
 
     try {
         const sub = await SubscriptionService.approveSubscription(subId);
 
         // Update the admin msg
-        await ctx.editMessageText(`✅ *Approved: Track ID ${sub.track_id}*\nHash has been verified and user notified.`, { parse_mode: 'Markdown' });
+        await ctx.editMessageText(t(lang, 'admin_approve_success', { trackId: sub.track_id }), { parse_mode: 'Markdown' });
+
+        // User target language (the user who bought the sub)
+        const targetLang = (sub.user.language as SupportedLanguage) || 'en';
 
         // Notify the user directly
-        const userMsg = `🎉 *Payment Approved!*\n\nYour transaction (${sub.track_id}) has been verified.\n\n*Your Connection Config:*\n\`${sub.config_link}\`\n\nYou can also find this link in '🛡 My Subscriptions'.`;
+        const userMsg = t(targetLang, 'admin_approve_user_dm', { trackId: sub.track_id, config: sub.config_link });
         await ctx.telegram.sendMessage(sub.user.telegram_id.toString(), userMsg, { parse_mode: 'Markdown' });
     } catch (e: any) {
         logger.error(`Approve error: ${e.message}`);
@@ -122,15 +128,18 @@ bot.action(/approve_tx_(\d+)/, async (ctx) => {
 bot.action(/reject_tx_(\d+)/, async (ctx) => {
     if (!ctx.dbUser?.is_admin) return;
     const subId = parseInt(ctx.match[1], 10);
+    const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
 
     try {
         const sub = await SubscriptionService.rejectSubscription(subId);
 
         // Update admin msg
-        await ctx.editMessageText(`❌ *Rejected: Track ID ${sub.track_id}*\nTransaction was rejected and user notified.`, { parse_mode: 'Markdown' });
+        await ctx.editMessageText(t(lang, 'admin_reject_success', { trackId: sub.track_id }), { parse_mode: 'Markdown' });
+
+        const targetLang = (sub.user.language as SupportedLanguage) || 'en';
 
         // Notify user directly
-        const userMsg = `🚫 *Payment Rejected*\n\nYour transaction (${sub.track_id}) could not be verified by our team. If you believe this is an error, please contact support and provide your hash.`;
+        const userMsg = t(targetLang, 'admin_reject_user_dm', { trackId: sub.track_id });
         await ctx.telegram.sendMessage(sub.user.telegram_id.toString(), userMsg, { parse_mode: 'Markdown' });
     } catch (e: any) {
         logger.error(`Reject error: ${e.message}`);
@@ -413,7 +422,7 @@ bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {
 
         await ctx.reply(
             t(lang, 'invite_success', { link: link }),
-            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } }
+            { parse_mode: 'HTML', link_preview_options: { is_disabled: false } }
         );
     } catch (e) {
         logger.error("Error generating user invite", e);
@@ -423,8 +432,10 @@ bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {
 
 bot.command('generate_invites', async (ctx) => {
     // Basic protection - hardcode to first user ID or add to env variable
+    const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
     if (ctx.dbUser?.id !== 1) {
-        return ctx.reply("Unauthorized.");
+        return ctx.reply(t(lang, 'admin_unauthorized'));
     }
     const countStr = ctx.message.text.split(' ')[1];
     const count = parseInt(countStr) || 1;
@@ -438,10 +449,10 @@ bot.command('generate_invites', async (ctx) => {
             return `• <code>${c.code}</code>\n  🔗 <a href="${link}">${link}</a>`;
         }).join('\n\n');
 
-        await ctx.reply(`Generated ${codes.length} invitation codes:\n\n${codeStrings}`, { parse_mode: 'HTML' });
+        await ctx.reply(t(lang, 'admin_invites_generated', { count: codes.length.toString(), codes: codeStrings }), { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
     } catch (e) {
         logger.error("Error generating codes", e);
-        await ctx.reply("Failed to generate codes.");
+        await ctx.reply(t(lang, 'admin_invites_failed'));
     }
 });
 
