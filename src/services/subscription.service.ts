@@ -159,4 +159,58 @@ export class SubscriptionService {
             return sub;
         });
     }
+
+    /**
+     * Issues a free trial subscription to a user.
+     */
+    static async createTrialSubscription(user: User): Promise<Subscription> {
+        return await AppDataSource.transaction(async manager => {
+            // Re-fetch user inside transaction with lock to prevent race conditions
+            const currentDbUser = await manager.findOne(User, {
+                where: { id: user.id },
+                lock: { mode: 'pessimistic_write' }
+            });
+
+            if (!currentDbUser) throw new Error("User not found.");
+            if (currentDbUser.has_used_trial) {
+                throw new Error("You have already claimed your free trial.");
+            }
+
+            // Find or dynamically create 'Free Trial' plan
+            let trialPlan = await manager.findOne(Plan, { where: { name: 'Free Trial' } });
+            if (!trialPlan) {
+                trialPlan = new Plan();
+                trialPlan.name = 'Free Trial';
+                trialPlan.price_usdt = 0;
+                trialPlan.volume_gb = 5; // 5GB
+                trialPlan.duration_days = 1; // 24 Hours
+                await manager.save(trialPlan);
+            }
+
+            const trackId = Math.floor(100000 + Math.random() * 900000).toString();
+
+            const sub = new Subscription();
+            sub.user_id = currentDbUser.id;
+            sub.plan_id = trialPlan.id;
+            sub.status = 'active';
+            sub.track_id = trackId;
+            sub.remaining_data_gb = trialPlan.volume_gb;
+
+            const dummyConfig = `vless://trial-dummy-uuid-${currentDbUser.id}-${Date.now()}@vprivate-server:443?type=tcp&security=tls#${trackId}`;
+
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + trialPlan.duration_days);
+
+            sub.config_link = dummyConfig;
+            sub.expiry_date = expiry;
+
+            await manager.save(sub);
+
+            // Flag user
+            currentDbUser.has_used_trial = true;
+            await manager.save(currentDbUser);
+
+            return sub;
+        });
+    }
 }

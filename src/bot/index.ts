@@ -137,6 +137,35 @@ bot.hears('🛒 Buy Plan', async (ctx) => {
     }
 });
 
+// Handle "Free Trial" button click
+bot.hears('🎁 Free Trial', async (ctx) => {
+    if (!ctx.dbUser) return;
+
+    try {
+        if (ctx.dbUser.has_used_trial) {
+            return ctx.reply("Wait a minute! You have already claimed your 24-hour free trial.\n\nUse the '🛒 Buy Plan' menu to purchase more data.");
+        }
+
+        await ctx.reply("🎁 Processing your free trial request...");
+
+        const sub = await SubscriptionService.createTrialSubscription(ctx.dbUser);
+
+        // Update session context state to reflect db state immediately
+        ctx.dbUser.has_used_trial = true;
+
+        let msg = `🎉 *Free Trial Activated!*\n\n`;
+        msg += `Welcome to our VPN service! You now have a 24-hour connection with ${sub.remaining_data_gb}GB data limit.\n\n`;
+        msg += `*Your Connection Config:*\n\`${sub.config_link}\`\n\n`;
+        msg += `You can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.`;
+
+        await ctx.reply(msg, { parse_mode: 'Markdown' });
+
+    } catch (e: any) {
+        logger.error(`Trial Error: ${e.message}`);
+        await ctx.reply(e.message.includes('already') ? e.message : "Sorry, an error occurred. Please try again later.");
+    }
+});
+
 // Handle the Inline Keyboard button click for purchasing a plan
 bot.action(/buy_plan_(\d+)/, async (ctx) => {
     const planId = ctx.match[1];
