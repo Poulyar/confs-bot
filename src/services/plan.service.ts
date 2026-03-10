@@ -1,5 +1,6 @@
 import { AppDataSource } from '../database/data-source';
 import { Plan } from '../database/entities';
+import { Not } from 'typeorm';
 
 export class PlanService {
     static getRepository() {
@@ -8,9 +9,13 @@ export class PlanService {
 
     /**
      * Retrieves all plans sorted by price ascending.
+     * Excludes the auto-generated "Free Trial" plan since it cannot be purchased.
      */
     static async getAllPlans(): Promise<Plan[]> {
         return await this.getRepository().find({
+            where: {
+                name: Not('Free Trial') // Hardcoded exclusion based on SubscriptionService gen name
+            },
             order: {
                 price_usdt: 'ASC'
             }
