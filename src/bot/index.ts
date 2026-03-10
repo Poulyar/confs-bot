@@ -167,8 +167,60 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
     }
 });
 
-// Handle Language Switcher
-bot.hears([en.change_lang_btn, fa.change_lang_btn], async (ctx) => {
+// Handle Language Selection (from inline keyboard)
+bot.action(/set_lang_(.*)/, async (ctx) => {
+    if (!ctx.dbUser) return;
+    const selectedLang = ctx.match[1] as SupportedLanguage;
+
+    try {
+        ctx.dbUser.language = selectedLang;
+        await AppDataSource.getRepository('User').save(ctx.dbUser);
+
+        // Let's drop them straight into the main menu keyboard using their new lang
+        const keyboard = Markup.keyboard([
+            [t(selectedLang, 'buy_plan_btn'), t(selectedLang, 'my_subs_btn')],
+            [t(selectedLang, 'free_trial_btn'), '🔗 Generate Invite Link'],
+            [t(selectedLang, 'setup_guide_btn'), t(selectedLang, 'profile_btn')],
+            [t(selectedLang, 'support_btn')]
+        ]).resize();
+
+        await ctx.answerCbQuery(t(selectedLang, 'lang_changed'));
+        await ctx.editMessageText(t(selectedLang, 'welcome'));
+
+        // Telegram doesn't allow sending a ReplyKeyboard on editMessageText, 
+        // We must send a new message to pop it up.
+        await ctx.reply(t(selectedLang, 'welcome'), keyboard);
+
+    } catch (e) {
+        logger.error("Lang select error", e);
+        await ctx.answerCbQuery("Error saving language.");
+    }
+});
+
+// Profile Handler
+bot.hears([en.profile_btn, fa.profile_btn], async (ctx) => {
+    if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
+
+    let roleStr = ctx.dbUser.is_admin ? (lang === 'en' ? 'Admin 👑' : 'مدیر 👑') : (lang === 'en' ? 'User 👤' : 'کاربر 👤');
+    let langStr = ctx.dbUser.language === 'en' ? 'English 🇺🇸' : 'فارسی 🇮🇷';
+
+    const msg = t(lang, 'profile_text', {
+        id: ctx.dbUser.telegram_id.toString(),
+        role: roleStr,
+        lang: langStr
+    });
+
+    // Profile Inline Keyboard: Contains language toggle button
+    const kb = Markup.inlineKeyboard([
+        [Markup.button.callback(t(lang, 'change_lang_btn'), 'toggle_lang')]
+    ]);
+
+    await ctx.reply(msg, { parse_mode: 'Markdown', ...kb });
+});
+
+// Profile -> Toggle Language Inline Button
+bot.action('toggle_lang', async (ctx) => {
     if (!ctx.dbUser) return;
 
     try {
@@ -177,19 +229,38 @@ bot.hears([en.change_lang_btn, fa.change_lang_btn], async (ctx) => {
         ctx.dbUser.language = newLang;
         await AppDataSource.getRepository('User').save(ctx.dbUser);
 
-        // Re-generate the keyboard in the new language
-        const keyboard = Markup.keyboard([
+        // Update main reply keyboard 
+        const rootKeyboard = Markup.keyboard([
             [t(newLang, 'buy_plan_btn'), t(newLang, 'my_subs_btn')],
             [t(newLang, 'free_trial_btn'), '🔗 Generate Invite Link'],
-            [t(newLang, 'setup_guide_btn'), t(newLang, 'support_btn')],
-            [t(newLang, 'change_lang_btn')]
+            [t(newLang, 'setup_guide_btn'), t(newLang, 'profile_btn')],
+            [t(newLang, 'support_btn')]
         ]).resize();
 
-        await ctx.reply(t(newLang, 'lang_changed'), keyboard);
+        await ctx.answerCbQuery(t(newLang, 'lang_changed'));
+
+        // Send a fresh message to pop the updated keyboard up
+        await ctx.reply(t(newLang, 'lang_changed'), rootKeyboard);
+
+        // Edit the profile text to reflect the new language
+        let roleStr = ctx.dbUser.is_admin ? (newLang === 'en' ? 'Admin 👑' : 'مدیر 👑') : (newLang === 'en' ? 'User 👤' : 'کاربر 👤');
+        let langStr = ctx.dbUser.language === 'en' ? 'English 🇺🇸' : 'فارسی 🇮🇷';
+
+        const msg = t(newLang, 'profile_text', {
+            id: ctx.dbUser.telegram_id.toString(),
+            role: roleStr,
+            lang: langStr
+        });
+
+        const kb = Markup.inlineKeyboard([
+            [Markup.button.callback(t(newLang, 'change_lang_btn'), 'toggle_lang')]
+        ]);
+
+        await ctx.editMessageText(msg, { parse_mode: 'Markdown', ...kb });
 
     } catch (e: any) {
         logger.error(`Lang Switch Error: ${e.message}`);
-        await ctx.reply("Error changing language.");
+        await ctx.answerCbQuery("Error changing language.");
     }
 });
 

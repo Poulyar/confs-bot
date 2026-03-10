@@ -21,8 +21,8 @@ export class User {
     @Column({ type: 'boolean', default: true })
     is_active: boolean = true;
 
-    @Column({ type: 'varchar', length: 5, default: 'en' })
-    language: 'en' | 'fa' = 'en';
+    @Column({ type: 'varchar', length: 5, nullable: true })
+    language: 'en' | 'fa' | null;
 
     @CreateDateColumn()
     created_at: Date;

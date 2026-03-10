@@ -3,6 +3,7 @@ export const en = {
     buy_plan_btn: "🛒 Buy Plan",
     free_trial_btn: "🎁 Free Trial",
     my_subs_btn: "🛡 My Subscriptions",
+    profile_btn: "👤 Profile",
     setup_guide_btn: "📚 Setup Guide",
     support_btn: "💬 Support",
     change_lang_btn: "🌍 Farsi / Farsi",
@@ -15,6 +16,10 @@ export const en = {
     // Misc
     unlimited: "Unlimited",
     generic_error: "Sorry, an error occurred. Please try again later.",
+
+    // Auth & Profile
+    choose_language_first: "Please select your language / لطفاً زبان خود را انتخاب کنید",
+    profile_text: "👤 *Your Profile*\n\nID: `{{id}}`\nRole: {{role}}\nLanguage: {{lang}}\n\nUse the buttons below to change your settings:",
 
     // Plans
     no_plans_avail: "There are currently no active plans to purchase. Please check back later.",

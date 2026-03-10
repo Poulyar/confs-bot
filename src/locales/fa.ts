@@ -3,6 +3,7 @@ export const fa = {
     buy_plan_btn: "🛒 خرید اشتراک",
     free_trial_btn: "🎁 تست رایگان",
     my_subs_btn: "🛡 اشتراک‌های من",
+    profile_btn: "👤 پروفایل",
     setup_guide_btn: "📚 راهنمای اتصال",
     support_btn: "💬 پشتیبانی",
     change_lang_btn: "🌍 English / انگلیسی",
@@ -15,6 +16,10 @@ export const fa = {
     // Misc
     unlimited: "نامحدود",
     generic_error: "متأسفانه خطایی رخ داده است. لطفاً بعداً دوباره تلاش کنید.",
+
+    // Auth & Profile
+    choose_language_first: "Please select your language / لطفاً زبان خود را انتخاب کنید",
+    profile_text: "👤 *پروفایل شما*\n\nشناسه: `{{id}}`\nنقش: {{role}}\nزبان: {{lang}}\n\nبرای تغییر تنظیمات از دکمه‌های زیر استفاده کنید:",
 
     // Plans
     no_plans_avail: "در حال حاضر هیچ اشتراکی برای خرید وجود ندارد. لطفاً بعداً بررسی کنید.",

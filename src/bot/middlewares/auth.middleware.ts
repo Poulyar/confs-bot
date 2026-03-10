@@ -1,5 +1,7 @@
 import { CustomContext } from '../../types';
 import { UserService } from '../../services/user.service';
+import { Markup } from 'telegraf';
+import { en } from '../../locales/en';
 
 export const authMiddleware = async (ctx: CustomContext, next: () => Promise<void>) => {
     if (!ctx.from) {
@@ -15,6 +17,24 @@ export const authMiddleware = async (ctx: CustomContext, next: () => Promise<voi
 
         if (!user.is_active) {
             await ctx.reply('Your account has been deactivated. Please contact support.');
+            return;
+        }
+
+        // If the user hasn't selected a language yet, force them to do so before proceeding
+        if (!user.language) {
+            // Allow the callback queries for language selection to pass through
+            if (ctx.callbackQuery && 'data' in ctx.callbackQuery) {
+                const data = ctx.callbackQuery.data;
+                if (data === 'set_lang_en' || data === 'set_lang_fa') {
+                    return await next();
+                }
+            }
+
+            const langKeyboard = Markup.inlineKeyboard([
+                Markup.button.callback('🇺🇸 English', 'set_lang_en'),
+                Markup.button.callback('🇮🇷 فارسی', 'set_lang_fa')
+            ]);
+            await ctx.reply(en.choose_language_first, langKeyboard);
             return;
         }
 
