@@ -3,6 +3,7 @@ import { CustomContext } from '../types';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { startCommand, adminCommand } from './commands/start.command';
 import { logger } from '../utils/logger';
+import { AppDataSource } from '../database/data-source';
 import * as dotenv from 'dotenv';
 import { UserService } from '../services/user.service';
 import { PlanService } from '../services/plan.service';
@@ -10,6 +11,9 @@ import { SubscriptionService } from '../services/subscription.service';
 import { Markup } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { checkoutWizard } from './scenes/checkout.wizard';
+import { en } from '../locales/en';
+import { fa } from '../locales/fa';
+import { t, SupportedLanguage } from '../locales';
 
 dotenv.config();
 
@@ -115,54 +119,77 @@ bot.action(/reject_tx_(\d+)/, async (ctx) => {
 });
 
 // Handle "Buy Plan" button click
-bot.hears('🛒 Buy Plan', async (ctx) => {
+bot.hears([en.buy_plan_btn, fa.buy_plan_btn], async (ctx) => {
     try {
         const plans = await PlanService.getAllPlans();
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
 
         if (plans.length === 0) {
-            return ctx.reply("There are currently no active plans to purchase. Please check back later.");
+            return ctx.reply(t(lang, 'no_plans_avail'));
         }
 
         // Group the plans into rows of 1 for the inline keyboard
         const buttons = plans.map(plan => {
-            const label = `${plan.name} - ${plan.volume_gb > 0 ? plan.volume_gb + 'GB' : 'Unlimited'} - $${plan.price_usdt}`;
+            const label = `${plan.name} - ${plan.volume_gb > 0 ? plan.volume_gb + 'GB' : t(lang, 'unlimited')} - $${plan.price_usdt}`;
             return [Markup.button.callback(label, `buy_plan_${plan.id}`)];
         });
 
-        await ctx.reply("Please select a plan from the options below:", Markup.inlineKeyboard(buttons));
+        await ctx.reply(t(lang, 'select_plan'), Markup.inlineKeyboard(buttons));
 
     } catch (e) {
         logger.error("Error fetching plans", e);
-        await ctx.reply("An error occurred while fetching our plans. Please try again.");
+        const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+        await ctx.reply(t(lang, 'generic_error'));
     }
 });
 
 // Handle "Free Trial" button click
-bot.hears('🎁 Free Trial', async (ctx) => {
+bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
     if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
 
     try {
         if (ctx.dbUser.has_used_trial) {
-            return ctx.reply("Wait a minute! You have already claimed your 24-hour free trial.\n\nUse the '🛒 Buy Plan' menu to purchase more data.");
+            return ctx.reply(t(lang, 'trial_already_used'));
         }
 
-        await ctx.reply("🎁 Processing your free trial request...");
+        await ctx.reply(t(lang, 'trial_processing'));
 
         const sub = await SubscriptionService.createTrialSubscription(ctx.dbUser);
 
-        // Update session context state to reflect db state immediately
         ctx.dbUser.has_used_trial = true;
 
-        let msg = `🎉 *Free Trial Activated!*\n\n`;
-        msg += `Welcome to our VPN service! You now have a 24-hour connection with ${sub.remaining_data_gb}GB data limit.\n\n`;
-        msg += `*Your Connection Config:*\n\`${sub.config_link}\`\n\n`;
-        msg += `You can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.`;
-
-        await ctx.reply(msg, { parse_mode: 'Markdown' });
+        await ctx.reply(t(lang, 'trial_success', { dataGB: sub.remaining_data_gb, config: sub.config_link }), { parse_mode: 'Markdown' });
 
     } catch (e: any) {
         logger.error(`Trial Error: ${e.message}`);
-        await ctx.reply(e.message.includes('already') ? e.message : "Sorry, an error occurred. Please try again later.");
+        await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : "Error.");
+    }
+});
+
+// Handle Language Switcher
+bot.hears([en.change_lang_btn, fa.change_lang_btn], async (ctx) => {
+    if (!ctx.dbUser) return;
+
+    try {
+        const newLang = ctx.dbUser.language === 'en' ? 'fa' : 'en';
+
+        ctx.dbUser.language = newLang;
+        await AppDataSource.getRepository('User').save(ctx.dbUser);
+
+        // Re-generate the keyboard in the new language
+        const keyboard = Markup.keyboard([
+            [t(newLang, 'buy_plan_btn'), t(newLang, 'my_subs_btn')],
+            [t(newLang, 'free_trial_btn'), '🔗 Generate Invite Link'],
+            [t(newLang, 'setup_guide_btn'), t(newLang, 'support_btn')],
+            [t(newLang, 'change_lang_btn')]
+        ]).resize();
+
+        await ctx.reply(t(newLang, 'lang_changed'), keyboard);
+
+    } catch (e: any) {
+        logger.error(`Lang Switch Error: ${e.message}`);
+        await ctx.reply("Error changing language.");
     }
 });
 
@@ -176,14 +203,15 @@ bot.action(/buy_plan_(\d+)/, async (ctx) => {
 });
 
 // Handle "My Subscriptions" button click
-bot.hears('🛡 My Subscriptions', async (ctx) => {
+bot.hears([en.my_subs_btn, fa.my_subs_btn], async (ctx) => {
     if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
 
     try {
         const subs = await SubscriptionService.getUserSubscriptions(ctx.dbUser.id);
 
         if (subs.length === 0) {
-            return ctx.reply("You don't have any subscriptions yet. Click '🛒 Buy Plan' to get started.");
+            return ctx.reply(t(lang, 'no_subs_yet'));
         }
 
         // Create an inline button for each subscription
@@ -193,11 +221,11 @@ bot.hears('🛡 My Subscriptions', async (ctx) => {
             return [Markup.button.callback(label, `manage_sub_${sub.id}`)];
         });
 
-        await ctx.reply("Here are your subscriptions. Click on one to view details:", Markup.inlineKeyboard(buttons));
+        await ctx.reply(t(lang, 'here_are_subs'), Markup.inlineKeyboard(buttons));
 
     } catch (e) {
         logger.error("Error fetching subscriptions", e);
-        await ctx.reply("Failed to load your subscriptions.");
+        await ctx.reply(t(lang, 'generic_error'));
     }
 });
 

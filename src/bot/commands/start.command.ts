@@ -1,9 +1,11 @@
 import { CustomContext } from '../../types';
 import { Markup } from 'telegraf';
+import { t, SupportedLanguage } from '../../locales';
 
 export const startCommand = async (ctx: CustomContext) => {
     // authMiddleware ensures this code only runs if the user is in the DB and active.
     const user = ctx.dbUser;
+    const lang = (user?.language as SupportedLanguage) || 'en';
 
     if (!user) {
         // Should theoretically never happen if middleware is working
@@ -15,14 +17,15 @@ export const startCommand = async (ctx: CustomContext) => {
         + `Your VIP Napster VPN portal is ready.\n`
         + `Use the buttons below to manage your configurations.`;
 
-    // Create main menu keyboard
+    // Create main menu keyboard using translations
     const keyboard = Markup.keyboard([
-        ['🛒 Buy Plan', '🛡 My Subscriptions'],
-        ['🎁 Free Trial', '🔗 Generate Invite Link'],
-        ['❓ Help Center']
+        [t(lang, 'buy_plan_btn'), t(lang, 'my_subs_btn')],
+        [t(lang, 'free_trial_btn'), '🔗 Generate Invite Link'],
+        [t(lang, 'setup_guide_btn'), t(lang, 'support_btn')],
+        [t(lang, 'change_lang_btn')]
     ]).resize();
 
-    await ctx.replyWithMarkdown(welcomeMessage, keyboard);
+    await ctx.reply(t(lang, 'welcome'), keyboard);
 };
 
 export const adminCommand = async (ctx: CustomContext) => {
