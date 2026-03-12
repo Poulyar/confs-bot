@@ -86,7 +86,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                     await ctx.reply(t(lang, 'checkout_100_discount'), { parse_mode: 'Markdown' });
 
                     try {
-                        const { subscription } = await SubscriptionService.createFreePurchase(ctx.dbUser!, state.plan, coupon.id);
+                        const { subscription } = await SubscriptionService.createFreePurchase(ctx.dbUser!, state.plan, coupon.id, state.trackId);
 
                         await ctx.reply(
                             t(lang, 'checkout_free_success', { config: subscription.config_link }),
