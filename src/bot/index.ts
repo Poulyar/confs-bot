@@ -9,6 +9,7 @@ import { UserService } from '../services/user.service';
 import { PlanService } from '../services/plan.service';
 import { SubscriptionService } from '../services/subscription.service';
 import { NpvtService } from '../services/npvt.service';
+import { VpnService } from '../services/vpn.service';
 import { Markup } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { checkoutWizard } from './scenes/checkout.wizard';
@@ -376,6 +377,40 @@ bot.action(/manage_sub_(\d+)/, async (ctx) => {
 
         await ctx.answerCbQuery();
 
+        // Sync live traffic from VPN panel if this sub has an npvt config assigned
+        if (sub.npvt_config_id) {
+            try {
+                const npvtConfig = await NpvtService.getConfigForSub(sub.id);
+                if (npvtConfig) {
+                    // Derive panel email: strip first hyphen-separated segment from filename (without extension)
+                    // e.g. "Ardashir-vl-20G7-100.npvt" => "vl-20G7-100"
+                    const baseName = npvtConfig.filename.replace(/\.npvt$/i, '');
+                    const panelEmail = baseName.substring(baseName.indexOf('-') + 1);
+
+                    const traffic = await VpnService.getClientTraffics(panelEmail);
+                    if (traffic) {
+                        // Update the DB with fresh values
+                        const subRepo = AppDataSource.getRepository('Subscription');
+                        const updates: any = {};
+                        if (traffic.remainingGb !== null) {
+                            updates.remaining_data_gb = traffic.remainingGb;
+                            sub.remaining_data_gb = traffic.remainingGb;
+                        }
+                        if (traffic.expiryDate !== null) {
+                            updates.expiry_date = traffic.expiryDate;
+                            sub.expiry_date = traffic.expiryDate;
+                        }
+                        if (Object.keys(updates).length > 0) {
+                            await subRepo.update(sub.id, updates);
+                        }
+                    }
+                }
+            } catch (syncErr: any) {
+                // Non-fatal: panel may be unreachable, show cached values
+                logger.warn(`Traffic sync skipped for sub ${subId}: ${syncErr.message}`);
+            }
+        }
+
         let message = t(lang, 'sub_details_title');
         message += t(lang, 'sub_track_id', { trackId: sub.track_id });
         message += t(lang, 'sub_plan', { planName: sub.plan.name });
@@ -406,6 +441,7 @@ bot.action(/manage_sub_(\d+)/, async (ctx) => {
         await ctx.answerCbQuery(t(lang, 'sub_failed_load'));
     }
 });
+
 
 // Handle 'Back to List' button
 bot.action('list_subs', async (ctx) => {

@@ -1,5 +1,5 @@
 export const en = {
-    welcome: "Welcome to Napster VPN! 🚀\n\nChoose an option below to get started:",
+    welcome: "Welcome to vPrivate VPN! 🚀\n\nChoose an option below to get started:",
     buy_plan_btn: "🛒 Buy Plan",
     free_trial_btn: "🎁 Free Trial",
     my_subs_btn: "🛡 My Subscriptions",

@@ -14,7 +14,7 @@ export const startCommand = async (ctx: CustomContext) => {
     }
 
     const welcomeMessage = `Welcome back, *${user.username || 'User'}*! 🛡\n\n`
-        + `Your VIP Napster VPN portal is ready.\n`
+        + `Your vPrivate VPN portal is ready.\n`
         + `Use the buttons below to manage your configurations.`;
 
     // Create main menu keyboard using translations
