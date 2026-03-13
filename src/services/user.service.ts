@@ -45,6 +45,13 @@ export class UserService {
         });
     }
 
+    /**
+     * Returns all users with admin privileges.
+     */
+    static async getAdmins(): Promise<User[]> {
+        return userRepository.find({ where: { is_admin: true } });
+    }
+
     static async generateInvitationCode(creatorId: number, count: number = 1): Promise<InvitationCode[]> {
         const codes: InvitationCode[] = [];
         for (let i = 0; i < count; i++) {

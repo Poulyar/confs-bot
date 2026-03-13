@@ -3,6 +3,7 @@ import { CustomContext } from '../../types';
 import { PlanService } from '../../services/plan.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { CouponService } from '../../services/coupon.service';
+import { UserService } from '../../services/user.service';
 import { logger } from '../../utils/logger';
 import { t, SupportedLanguage } from '../../locales';
 
@@ -189,12 +190,28 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             const finalPrice = state.finalPrice ?? plan.price_usdt;
 
             // Call the service to save to Postgres
-            await SubscriptionService.createPendingPurchase(user, plan, txid, trackId, finalPrice, state.coupon_id);
+            const { subscription } = await SubscriptionService.createPendingPurchase(user, plan, txid, trackId, finalPrice, state.coupon_id);
 
             await ctx.reply(
                 t(lang, 'checkout_txid_recorded', { txid, trackId }),
                 { parse_mode: 'Markdown' }
             );
+
+            // Notify all admins (fire-and-forget — don't block user on DM failures)
+            UserService.getAdmins().then(admins => {
+                const adminMsg =
+                    `🔔 *New Payment Submitted*\n\n` +
+                    `👤 User: @${user.username || user.telegram_id} (ID: \`${user.telegram_id}\`)\n` +
+                    `📦 Plan: \`${plan.name}\`\n` +
+                    `🧾 Track ID: \`${trackId}\`\n` +
+                    `🔗 Hash: \`${txid}\`\n\n` +
+                    `Use /pending to review.`;
+
+                for (const admin of admins) {
+                    ctx.telegram.sendMessage(admin.telegram_id.toString(), adminMsg, { parse_mode: 'Markdown' })
+                        .catch(e => logger.warn(`Failed to notify admin ${admin.telegram_id}: ${e.message}`));
+                }
+            }).catch(e => logger.warn(`Failed to fetch admins for notification: ${e.message}`));
         } catch (e: any) {
             logger.error(`Checkout Wizard Error Saving TXID: ${e.message}`);
             // If they provided a duplicate TX hash, we will let them know
