@@ -132,4 +132,56 @@ export class VpnService {
             throw error;
         }
     }
+    /**
+     * Fetches live traffic and expiry data for a client from the 3X-UI panel.
+     * @param email The client's email identifier on the panel (e.g. "vl-20G7-100")
+     * @returns Parsed traffic object or null if unavailable
+     */
+    static async getClientTraffics(email: string): Promise<{
+        remainingGb: number | null;
+        expiryDate: Date | null;
+        isEnabled: boolean;
+    } | null> {
+        if (!this.sessionCookie) {
+            const loggedIn = await this.login();
+            if (!loggedIn) return null;
+        }
+
+        try {
+            const response = await this.api.get(`/panel/api/inbounds/getClientTraffics/${encodeURIComponent(email)}`);
+
+            if (!response.data.success || !response.data.obj) return null;
+
+            const obj = response.data.obj;
+
+            // Calculate remaining data in GB (total - up - down), rounded to 2 decimals
+            // total = 0 means unlimited
+            let remainingGb: number | null = null;
+            if (obj.total > 0) {
+                const usedBytes = (obj.up || 0) + (obj.down || 0);
+                const remainingBytes = Math.max(0, obj.total - usedBytes);
+                remainingGb = Math.round((remainingBytes / (1024 * 1024 * 1024)) * 100) / 100;
+            }
+
+            // Parse expiry time: positive ms timestamp = real date, <=0 = no expiry
+            let expiryDate: Date | null = null;
+            if (obj.expiryTime > 0) {
+                expiryDate = new Date(obj.expiryTime);
+            }
+
+            return {
+                remainingGb,
+                expiryDate,
+                isEnabled: obj.enable,
+            };
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                this.sessionCookie = null;
+                logger.warn('3X-UI session expired during getClientTraffics.');
+            } else {
+                logger.error(`getClientTraffics error for ${email}: ${error.message}`);
+            }
+            return null;
+        }
+    }
 }

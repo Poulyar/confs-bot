@@ -48,7 +48,7 @@ export const authMiddleware = async (ctx: CustomContext, next: () => Promise<voi
 
             // If they just typed /start, ask for the code
             if (text === '/start') {
-                await ctx.reply('Welcome to Napster VPN VIP.\nThis is an invite-only service. Please enter your invitation code:');
+                await ctx.reply('Welcome to vPrivate VPN VIP.\nThis is an invite-only service. Please enter your invitation code:');
                 return;
             }
 
