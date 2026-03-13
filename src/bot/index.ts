@@ -8,10 +8,12 @@ import * as dotenv from 'dotenv';
 import { UserService } from '../services/user.service';
 import { PlanService } from '../services/plan.service';
 import { SubscriptionService } from '../services/subscription.service';
+import { NpvtService } from '../services/npvt.service';
 import { Markup } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { checkoutWizard } from './scenes/checkout.wizard';
 import { adminCouponWizard } from './scenes/admin-coupon.wizard';
+import { adminNpvtWizard } from './scenes/admin-npvt.wizard';
 import { en } from '../locales/en';
 import { fa } from '../locales/fa';
 import { t, SupportedLanguage } from '../locales';
@@ -40,7 +42,7 @@ bot.use(session());
 bot.use(authMiddleware);
 
 // Setup scenes (This must come AFTER authMiddleware so scenes have ctx.dbUser)
-const stage = new Scenes.Stage<CustomContext>([checkoutWizard, adminCouponWizard]);
+const stage = new Scenes.Stage<CustomContext>([checkoutWizard, adminCouponWizard, adminNpvtWizard]);
 bot.use(stage.middleware());
 
 // Register Commands
@@ -52,6 +54,13 @@ bot.action('generate_coupon', async (ctx) => {
     await ctx.scene.enter('ADMIN_COUPON_WIZARD');
     await ctx.answerCbQuery();
 });
+
+bot.action('upload_npvt_configs', async (ctx) => {
+    if (!ctx.dbUser?.is_admin) return;
+    await ctx.scene.enter('ADMIN_NPVT_WIZARD');
+    await ctx.answerCbQuery();
+});
+
 
 const handlePendingSubs = async (ctx: any) => {
     const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
@@ -116,14 +125,33 @@ bot.action(/approve_tx_(\d+)/, async (ctx) => {
         // User target language (the user who bought the sub)
         const targetLang = (sub.user.language as SupportedLanguage) || 'en';
 
-        // Notify the user directly
-        const userMsg = t(targetLang, 'admin_approve_user_dm', { trackId: sub.track_id, config: sub.config_link });
-        await ctx.telegram.sendMessage(sub.user.telegram_id.toString(), userMsg, { parse_mode: 'Markdown' });
+        // Send the .npvt config file to the user
+        const npvtConfig = await NpvtService.getConfigForSub(sub.id);
+        if (npvtConfig) {
+            const fileBuffer = Buffer.from(npvtConfig.file_data, 'base64');
+            await ctx.telegram.sendDocument(
+                sub.user.telegram_id.toString(),
+                { source: fileBuffer, filename: 'vprivate-config.npvt' },
+                { caption: t(targetLang, 'admin_approve_user_dm', { trackId: sub.track_id }) }
+            );
+        } else {
+            // Fallback: text message if no file (shouldn't happen)
+            await ctx.telegram.sendMessage(
+                sub.user.telegram_id.toString(),
+                t(targetLang, 'admin_approve_user_dm', { trackId: sub.track_id }),
+                { parse_mode: 'Markdown' }
+            );
+        }
     } catch (e: any) {
         logger.error(`Approve error: ${e.message}`);
-        await ctx.answerCbQuery(`Error: ${e.message}`);
+        if (e.message.startsWith('NO_CONFIGS_AVAILABLE:')) {
+            const planName = e.message.split(':')[1];
+            await ctx.answerCbQuery(`⚠️ No configs in pool for plan "${planName}". Upload more before approving.`, { show_alert: true });
+        } else {
+            await ctx.answerCbQuery(`Error: ${e.message}`);
+        }
     }
-});
+});;
 
 // Admin rejects transaction
 bot.action(/reject_tx_(\d+)/, async (ctx) => {
@@ -178,23 +206,23 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
     if (!ctx.dbUser) return;
     const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
 
-    try {
-        if (ctx.dbUser.has_used_trial) {
-            return ctx.reply(t(lang, 'trial_already_used'));
-        }
+    // try {
+    //     if (ctx.dbUser.has_used_trial) {
+    //         return ctx.reply(t(lang, 'trial_already_used'));
+    //     }
 
-        await ctx.reply(t(lang, 'trial_processing'));
+    //     await ctx.reply(t(lang, 'trial_processing'));
 
-        const sub = await SubscriptionService.createTrialSubscription(ctx.dbUser);
+    //     const sub = await SubscriptionService.createTrialSubscription(ctx.dbUser);
 
-        ctx.dbUser.has_used_trial = true;
+    //     ctx.dbUser.has_used_trial = true;
 
-        await ctx.reply(t(lang, 'trial_success', { dataGB: sub.remaining_data_gb, config: sub.config_link }), { parse_mode: 'Markdown' });
+    //     await ctx.reply(t(lang, 'trial_success', { dataGB: sub.remaining_data_gb, config: sub.config_link }), { parse_mode: 'Markdown' });
 
-    } catch (e: any) {
-        logger.error(`Trial Error: ${e.message}`);
-        await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : "Error.");
-    }
+    // } catch (e: any) {
+    //     logger.error(`Trial Error: ${e.message}`);
+    //     await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : "Error.");
+    // }
 });
 
 // Handle Language Selection (from inline keyboard)
@@ -359,17 +387,16 @@ bot.action(/manage_sub_(\d+)/, async (ctx) => {
             message += t(lang, 'sub_data_remaining', { remaining: sub.remaining_data_gb.toString() });
             message += sub.expiry_date ? t(lang, 'sub_expiry', { date: sub.expiry_date.toLocaleDateString() }) : t(lang, 'sub_not_active');
             message += `\n`;
-
-            if (sub.config_link) {
-                message += t(lang, 'sub_config', { config: sub.config_link });
-            } else {
-                message += `_Config link not assigned yet._`;
-            }
         }
 
-        const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback(t(lang, 'sub_back_btn'), 'list_subs')]
-        ]);
+        const keyboardButtons: any[][] = [[Markup.button.callback(t(lang, 'sub_back_btn'), 'list_subs')]];
+
+        // Add re-download button if a config file is assigned
+        if (sub.npvt_config_id) {
+            keyboardButtons.unshift([Markup.button.callback('📥 Re-download Config', `redownload_config_${sub.id}`)]);
+        }
+
+        const keyboard = Markup.inlineKeyboard(keyboardButtons);
 
         await ctx.reply(message, { parse_mode: 'Markdown', ...keyboard });
 
@@ -405,6 +432,33 @@ bot.action('list_subs', async (ctx) => {
         logger.error("Error refreshing subs", e);
     }
 });
+
+// Handle re-download of assigned .npvt config
+bot.action(/redownload_config_(\d+)/, async (ctx) => {
+    if (!ctx.dbUser) return;
+    const subId = parseInt(ctx.match[1], 10);
+    const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+
+    try {
+        await ctx.answerCbQuery();
+
+        const config = await NpvtService.getConfigForSub(subId);
+        if (!config) {
+            await ctx.reply(t(lang, 'sub_config_not_found'));
+            return;
+        }
+
+        const fileBuffer = Buffer.from(config.file_data, 'base64');
+        await ctx.replyWithDocument(
+            { source: fileBuffer, filename: 'vprivate-config.npvt' },
+            { caption: t(lang, 'sub_config_redownload_caption') }
+        );
+    } catch (e) {
+        logger.error(`Redownload error for sub ${subId}`, e);
+        await ctx.reply(t(lang, 'generic_error'));
+    }
+});
+
 
 // Handle "Generate Invite Link" button click
 bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {

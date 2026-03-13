@@ -1,6 +1,7 @@
 import { AppDataSource } from '../database/data-source';
 import { Subscription, Transaction, User, Plan } from '../database/entities';
 import { VpnService } from './vpn.service';
+import { NpvtService } from './npvt.service';
 
 export class SubscriptionService {
     static getSubRepository() {
@@ -120,18 +121,18 @@ export class SubscriptionService {
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + sub.plan.duration_days);
 
-        // Generate real config using 3X-UI
-        const email = `user_${sub.user_id}_sub_${sub.id}`;
-        const limitGb = sub.plan.volume_gb;
-        const expiryMs = expiry.getTime(); // 3X-UI uses epoch milliseconds
-
-        const realConfig = await VpnService.createClient(email, limitGb, expiryMs);
-        if (!realConfig) {
-            throw new Error("Failed to generate real VPN configuration from 3X-UI panel.");
-        }
+        // --- VPN PANEL GENERATION (commented out — using .npvt pool instead) ---
+        // const email = `user_${sub.user_id}_sub_${sub.id}`;
+        // const limitGb = sub.plan.volume_gb;
+        // const expiryMs = expiry.getTime();
+        // const realConfig = await VpnService.createClient(email, limitGb, expiryMs);
+        // if (!realConfig) {
+        //     throw new Error("Failed to generate real VPN configuration from 3X-UI panel.");
+        // }
+        // sub.config_link = realConfig;
+        // -----------------------------------------------------------------------
 
         sub.status = 'active';
-        sub.config_link = realConfig;
         sub.expiry_date = expiry;
 
         // Burn the coupon if exists
@@ -158,6 +159,13 @@ export class SubscriptionService {
 
             tx.status = 'confirmed';
             await manager.save(tx);
+
+            // Claim an .npvt config from the pool for this plan
+            const npvtConfig = await NpvtService.claimForSubscription(subId, sub.plan_id);
+            if (!npvtConfig) {
+                throw new Error(`NO_CONFIGS_AVAILABLE:${sub.plan.name}`);
+            }
+            sub.npvt_config_id = npvtConfig.id;
 
             return await this.provisionSubscription(sub, manager);
         });

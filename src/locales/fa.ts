@@ -42,7 +42,7 @@ export const fa = {
     admin_invites_failed: "ساخت کد دعوت با خطا مواجه شد.",
     admin_approve_success: "✅ *تایید شد: کد پیگیری {{trackId}}*\nتراکنش تایید و به کاربر اطلاع داده شد.",
     admin_reject_success: "❌ *رد شد: کد پیگیری {{trackId}}*\nتراکنش رد و به کاربر اطلاع داده شد.",
-    admin_approve_user_dm: "🎉 *پرداخت شما تایید شد!*\n\nتراکنش شما ({{trackId}}) با موفقیت تایید شد.\n\n*لینک اتصال شما:*\n`{{config}}`\n\nهمچنین می‌توانید این لینک را در '🛡 اشتراک‌های من' پیدا کنید.",
+    admin_approve_user_dm: "🎉 *پرداخت شما تایید شد!*\n\nتراکنش شما ({{trackId}}) با موفقیت تایید شد.\n\nهمچنین می‌توانید این فایل را در '🛡 اشتراک‌های من' پیدا کنید.",
     admin_reject_user_dm: "🚫 *پرداخت شما رد شد*\n\nتراکنش شما ({{trackId}}) توسط تیم ما تایید نشد. اگر فکر می‌کنید این یک اشتباه است، لطفاً با پشتیبانی تماس بگیرید و هش خود را ارائه دهید.",
 
     admin_coupon_btn: "🎫 ساخت کد تخفیف",
@@ -111,6 +111,18 @@ export const fa = {
     sub_failed_load: "بارگیری جزئیات با خطا مواجه شد.",
     sub_get_config_btn: "دریافت کانفیگ",
     sub_renew_btn: "تمدید مجدد",
+    sub_config_not_found: "فایل کانفیگ یافت نشد. لطفاً با پشتیبانی تماس بگیرید.",
+    sub_config_redownload_caption: "📥 فایل VPN شما. آن را در اپ VPN خود وارد کنید.",
+
+    // Admin NPVT Pool
+    admin_npvt_btn: "📦 آپلود کانفیگ‌ها",
+    admin_npvt_pool_status: "📦 وضعیت مخزن کانفیگ:",
+    admin_npvt_send_zip: "لطفاً یک فایل .zip حاوی فایل‌های .npvt کانفیگ ارسال کنید.",
+    admin_npvt_select_plan: "این کانفیگ‌ها برای کدام اشتراک هستند؟",
+    admin_npvt_success: "✅ {{count}} کانفیگ برای اشتراک {{planName}} آپلود شد.",
+    admin_npvt_no_npvt: "❌ هیچ فایل .npvt در زیپ یافت نشد.",
+    admin_npvt_wrong_file: "❌ لطفاً یک فایل .zip ارسال کنید.",
+    admin_npvt_error: "❌ آپلود با خطا مواجه شد. دوباره تلاش کنید.",
 
     // General
     generic_error_fetch_pendings: "خطا در دریافت لیست تراکنش‌های در انتظار."

@@ -42,7 +42,7 @@ export const en = {
     admin_invites_failed: "Failed to generate codes.",
     admin_approve_success: "✅ *Approved: Track ID {{trackId}}*\nHash has been verified and user notified.",
     admin_reject_success: "❌ *Rejected: Track ID {{trackId}}*\nTransaction was rejected and user notified.",
-    admin_approve_user_dm: "🎉 *Payment Approved!*\n\nYour transaction ({{trackId}}) has been verified.\n\n*Your Connection Config:*\n`{{config}}`\n\nYou can also find this link in '🛡 My Subscriptions'.",
+    admin_approve_user_dm: "🎉 *Payment Approved!*\n\nYour transaction ({{trackId}}) has been verified.\n\nYou can also find this config in '🛡 My Subscriptions'.",
     admin_reject_user_dm: "🚫 *Payment Rejected*\n\nYour transaction ({{trackId}}) could not be verified by our team. If you believe this is an error, please contact support and provide your hash.",
 
     admin_coupon_btn: "🎫 Generate Coupon",
@@ -111,6 +111,18 @@ export const en = {
     sub_failed_load: "Failed to load details.",
     sub_get_config_btn: "Get Config",
     sub_renew_btn: "Renew Subscription",
+    sub_config_not_found: "Config file not found. Please contact support.",
+    sub_config_redownload_caption: "📥 Here is your VPN config file. Import it in your VPN client app.",
+
+    // Admin NPVT Pool
+    admin_npvt_btn: "📦 Upload Configs",
+    admin_npvt_pool_status: "📦 Config Pool Status:",
+    admin_npvt_send_zip: "Please send a .zip file containing your .npvt config files.",
+    admin_npvt_select_plan: "Which plan are these configs for?",
+    admin_npvt_success: "✅ Uploaded {{count}} config(s) to pool for plan: {{planName}}",
+    admin_npvt_no_npvt: "❌ No .npvt files found in the zip.",
+    admin_npvt_wrong_file: "❌ Please send a .zip file.",
+    admin_npvt_error: "❌ Upload failed. Please try again.",
 
     // General
     generic_error_fetch_pendings: "Error fetching pending transactions."

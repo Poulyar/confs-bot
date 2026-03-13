@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDa
 import { User } from './User';
 import { Plan } from './Plan';
 import { Coupon } from './Coupon';
+import { NpvtConfig } from './NpvtConfig';
 
 @Entity('subscriptions')
 export class Subscription {
@@ -34,6 +35,13 @@ export class Subscription {
 
     @Column({ type: 'text', unique: true, nullable: true })
     napster_config_id: string; // Remote UUID in VPN Panel
+
+    @ManyToOne(() => NpvtConfig, { nullable: true, eager: false })
+    @JoinColumn({ name: 'npvt_config_id' })
+    npvt_config: NpvtConfig;
+
+    @Column({ nullable: true })
+    npvt_config_id: number;
 
     @Column({ type: 'text', nullable: true })
     config_link: string; // Verification/connection string
