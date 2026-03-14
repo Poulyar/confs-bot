@@ -13,5 +13,8 @@ COPY . .
 # Build the TypeScript code
 RUN npm run build
 
-# Start the bot
-CMD ["npm", "start"]
+# Entrypoint: wait for DB, run migrations, run seed, then start
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
