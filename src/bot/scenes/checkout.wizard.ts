@@ -9,9 +9,11 @@ import { t, SupportedLanguage } from '../../locales';
 
 // Hardcoded Dummy Wallets for now
 const WALLETS = {
-    'TRC20': 'T-DummyAddress-TRC20-123456',
-    'ERC20': '0x-DummyAddress-ERC20-123456',
-    'TON': 'UQ-DummyAddress-TON-123456'
+    'TRC20': 'TReAQNyWFQzFaqiGmF22ripUyjzUXQzX2E',
+    'ERC20': '0x8Ae1Dd63e4AB324ae93910b728d281D96a4547F5',
+    'BEP20': '0x8Ae1Dd63e4AB324ae93910b728d281D96a4547F5',
+    'SOL': 'BQMFy4hFYMrhRfJhuGpNPzY5ETMXk16799hMTtRHCQbC',
+    'TON': 'UQCTzZzvfDxmocsABag_KXu7FVyiUP8BOHT7sKssyzTtuVZD'
 };
 
 export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
@@ -47,6 +49,8 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             [Markup.button.callback(t(lang, 'checkout_apply_coupon_btn'), 'apply_coupon')],
             [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
             [Markup.button.callback('USDT (ERC20)', 'network_ERC20')],
+            [Markup.button.callback('USDT (BEP20)', 'network_BEP20')],
+            [Markup.button.callback('USDT (SOL)', 'network_SOL')],
             [Markup.button.callback('USDT (TON)', 'network_TON')],
             [Markup.button.callback(t(lang, 'checkout_cancel_btn'), 'cancel_checkout')]
         ]);
@@ -107,6 +111,8 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                 const networkKeyboard = Markup.inlineKeyboard([
                     [Markup.button.callback('USDT (TRC20)', 'network_TRC20')],
                     [Markup.button.callback('USDT (ERC20)', 'network_ERC20')],
+                    [Markup.button.callback('USDT (BEP20)', 'network_BEP20')],
+                    [Markup.button.callback('USDT (SOL)', 'network_SOL')],
                     [Markup.button.callback('USDT (TON)', 'network_TON')],
                     [Markup.button.callback(t(lang, 'checkout_cancel_btn'), 'cancel_checkout')]
                 ]);
