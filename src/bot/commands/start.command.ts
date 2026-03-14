@@ -20,9 +20,8 @@ export const startCommand = async (ctx: CustomContext) => {
     // Create main menu keyboard using translations
     const keyboard = Markup.keyboard([
         [t(lang, 'buy_plan_btn'), t(lang, 'my_subs_btn')],
-        [t(lang, 'free_trial_btn'), t(lang, 'invite_link_btn')],
-        [t(lang, 'setup_guide_btn'), t(lang, 'profile_btn')],
-        [t(lang, 'support_btn')]
+        [t(lang, 'invite_link_btn'), t(lang, 'setup_guide_btn')],
+        [t(lang, 'profile_btn'), t(lang, 'support_btn')]
     ]).resize();
 
     await ctx.reply(t(lang, 'welcome'), keyboard);

@@ -202,29 +202,7 @@ bot.hears([en.buy_plan_btn, fa.buy_plan_btn], async (ctx) => {
     }
 });
 
-// Handle "Free Trial" button click
-bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
-    if (!ctx.dbUser) return;
-    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
-
-    // try {
-    //     if (ctx.dbUser.has_used_trial) {
-    //         return ctx.reply(t(lang, 'trial_already_used'));
-    //     }
-
-    //     await ctx.reply(t(lang, 'trial_processing'));
-
-    //     const sub = await SubscriptionService.createTrialSubscription(ctx.dbUser);
-
-    //     ctx.dbUser.has_used_trial = true;
-
-    //     await ctx.reply(t(lang, 'trial_success', { dataGB: sub.remaining_data_gb, config: sub.config_link }), { parse_mode: 'Markdown' });
-
-    // } catch (e: any) {
-    //     logger.error(`Trial Error: ${e.message}`);
-    //     await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : "Error.");
-    // }
-});
+// Free trial handler removed as per user request.
 
 // Handle Language Selection (from inline keyboard)
 bot.action(/set_lang_(.*)/, async (ctx) => {
@@ -238,9 +216,8 @@ bot.action(/set_lang_(.*)/, async (ctx) => {
         // Let's drop them straight into the main menu keyboard using their new lang
         const keyboard = Markup.keyboard([
             [t(selectedLang, 'buy_plan_btn'), t(selectedLang, 'my_subs_btn')],
-            [t(selectedLang, 'free_trial_btn'), t(selectedLang, 'invite_link_btn')],
-            [t(selectedLang, 'setup_guide_btn'), t(selectedLang, 'profile_btn')],
-            [t(selectedLang, 'support_btn')]
+            [t(selectedLang, 'invite_link_btn'), t(selectedLang, 'setup_guide_btn')],
+            [t(selectedLang, 'profile_btn'), t(selectedLang, 'support_btn')]
         ]).resize();
 
         await ctx.answerCbQuery(t(selectedLang, 'lang_changed'));
@@ -523,6 +500,20 @@ bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {
         logger.error("Error generating user invite", e);
         await ctx.reply(t(lang, 'invite_error'));
     }
+});
+
+// Handle "Setup Guide" button click
+bot.hears([en.setup_guide_btn, fa.setup_guide_btn], async (ctx) => {
+    if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
+    await ctx.reply(t(lang, 'setup_guide_msg'), { parse_mode: 'HTML' });
+});
+
+// Handle "Support" button click
+bot.hears([en.support_btn, fa.support_btn], async (ctx) => {
+    if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
+    await ctx.reply(t(lang, 'support_msg'), { parse_mode: 'HTML' });
 });
 
 bot.command('generate_invites', async (ctx) => {
