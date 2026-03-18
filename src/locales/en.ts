@@ -7,8 +7,6 @@ export const en = {
     invite_link_btn: "🔗 Generate Invite Link",
     setup_guide_btn: "📚 Setup Guide",
     support_btn: "💬 Support",
-    setup_guide_msg: "📚 <b>Setup Guide</b>\n\nYou can find our detailed setup guide for all devices in our official channel:\n\n🔗 https://t.me/+gtGJ0sxhYeVjNmM0",
-    support_msg: "💬 <b>Support</b>\n\nIf you have any questions or issues, please contact our support team:\n\n👤 https://t.me/vPrivate_support",
     change_lang_btn: "🌍 Farsi / Farsi",
 
     // Trial
