@@ -7,6 +7,8 @@ export const fa = {
     invite_link_btn: "🔗 دریافت لینک دعوت",
     setup_guide_btn: "📚 راهنمای اتصال",
     support_btn: "💬 پشتیبانی",
+    setup_guide_msg: "📚 <b>راهنمای اتصال</b>\n\nشما می‌توانید راهنمای کامل اتصال برای تمامی دستگاه‌ها را در کانال رسمی ما مشاهده کنید:\n\n🔗 https://t.me/+gtGJ0sxhYeVjNmM0",
+    support_msg: "💬 <b>پشتیبانی</b>\n\nدر صورت داشتن هرگونه سوال یا مشکل، لطفاً با پشتیبانی ما در ارتباط باشید:\n\n👤 https://t.me/vPrivate_support",
     change_lang_btn: "🌍 English / انگلیسی",
 
     // Trial
