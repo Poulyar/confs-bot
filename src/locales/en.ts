@@ -12,9 +12,10 @@ export const en = {
     change_lang_btn: "🌍 Farsi / Farsi",
 
     // Trial
-    trial_already_used: "Wait a minute! You have already claimed your 24-hour free trial.\n\nUse the '🛒 Buy Plan' menu to purchase more data.",
+    trial_already_used: "Wait a minute! You have already claimed your free trial.\n\nUse the '🛒 Buy Plan' menu to purchase more data.",
     trial_processing: "🎁 Processing your free trial request...",
-    trial_success: "🎉 *Free Trial Activated!*\n\nWelcome to our VPN service! You now have a 24-hour connection with {{dataGB}}GB data limit.\n\n*Your Connection Config:*\n`{{config}}`\n\nYou can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.",
+    trial_success: "🎉 *Free Trial Activated!*\n\nWelcome to our VPN service! You now have a 10-minute connection with 200MB data limit.\n\n📥 **Import the attached config file** into your VPN client app.\n\nYou can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.",
+    trial_no_configs: "⚠️ Sorry, we've run out of free trial configurations at the moment. Please try again later or contact support.",
 
     // Misc
     unlimited: "Unlimited",

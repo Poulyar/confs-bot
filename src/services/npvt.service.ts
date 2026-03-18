@@ -39,9 +39,9 @@ export class NpvtService {
      * Atomically claims one available config for the given plan
      * and links it to the subscription. Returns null if pool is empty.
      */
-    static async claimForSubscription(subId: number, planId: number): Promise<NpvtConfig | null> {
-        return await AppDataSource.transaction(async manager => {
-            const repo = manager.getRepository(NpvtConfig);
+    static async claimForSubscription(subId: number, planId: number, manager?: any): Promise<NpvtConfig | null> {
+        const work = async (m: any) => {
+            const repo = m.getRepository(NpvtConfig);
 
             // Lock a single available row for this plan
             const config = await repo
@@ -57,8 +57,14 @@ export class NpvtService {
 
             config.is_assigned = true;
             config.assigned_to_sub_id = subId;
-            return await manager.save(config);
-        });
+            return await m.save(config);
+        };
+
+        if (manager) {
+            return await work(manager);
+        } else {
+            return await AppDataSource.transaction(work);
+        }
     }
 
     /**

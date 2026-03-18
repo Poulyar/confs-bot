@@ -23,6 +23,17 @@ export class PlanService {
     }
 
     /**
+     * Retrieves all plans for admin use, including the "Free Trial" plan.
+     */
+    static async getAllPlansForAdmin(): Promise<Plan[]> {
+        return await this.getRepository().find({
+            order: {
+                price_usdt: 'ASC'
+            }
+        });
+    }
+
+    /**
      * Finds a plan by its ID.
      */
     static async getPlanById(id: number): Promise<Plan | null> {

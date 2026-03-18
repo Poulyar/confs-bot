@@ -161,7 +161,7 @@ export class SubscriptionService {
             await manager.save(tx);
 
             // Claim an .npvt config from the pool for this plan
-            const npvtConfig = await NpvtService.claimForSubscription(subId, sub.plan_id);
+            const npvtConfig = await NpvtService.claimForSubscription(subId, sub.plan_id, manager);
             if (!npvtConfig) {
                 throw new Error(`NO_CONFIGS_AVAILABLE:${sub.plan.name}`);
             }
@@ -236,6 +236,70 @@ export class SubscriptionService {
     }
 
     /**
+     * Issues a free trial subscription by claiming an available config from the .npvt pool.
+     */
+    static async claimTrialSubscription(user: User): Promise<Subscription> {
+        return await AppDataSource.transaction(async manager => {
+            // Re-fetch user inside transaction with lock to prevent race conditions
+            const currentDbUser = await manager.findOne(User, {
+                where: { id: user.id },
+                lock: { mode: 'pessimistic_write' }
+            });
+
+            if (!currentDbUser) throw new Error("User not found.");
+            if (currentDbUser.has_used_trial) {
+                throw new Error("You have already claimed your free trial.");
+            }
+
+            // Find or dynamically create 'Free Trial' plan
+            let trialPlan = await manager.findOne(Plan, { where: { name: 'Free Trial' } });
+            if (!trialPlan) {
+                trialPlan = new Plan();
+                trialPlan.name = 'Free Trial';
+                trialPlan.price_usdt = 0;
+                trialPlan.volume_gb = 0.2; // 200MB
+                trialPlan.duration_days = 10 / (24 * 60); // 10 Minutes
+                trialPlan = await manager.save(trialPlan);
+            }
+
+            const trackId = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Create the subscription record
+            const sub = new Subscription();
+            sub.user_id = currentDbUser.id;
+            sub.plan_id = trialPlan.id;
+            sub.status = 'active'; // Trials are activated immediately
+            sub.track_id = trackId;
+            sub.remaining_data_gb = trialPlan.volume_gb;
+
+            const expiry = new Date();
+            expiry.setMinutes(expiry.getMinutes() + Math.round(trialPlan.duration_days * 24 * 60));
+            sub.expiry_date = expiry;
+
+            // Wait to save 'sub' until we have an npvtConfig if possible, 
+            // but NpvtService.claimForSubscription needs subId.
+            // So we save sub first.
+            const savedSub = await manager.save(sub);
+
+            // Claim an .npvt config from the pool for the Free Trial plan
+            const npvtConfig = await NpvtService.claimForSubscription(savedSub.id, trialPlan.id, manager);
+            if (!npvtConfig) {
+                // Rollback if no configs available
+                throw new Error(`NO_CONFIGS_AVAILABLE:${trialPlan.name}`);
+            }
+
+            savedSub.npvt_config_id = npvtConfig.id;
+            await manager.save(savedSub);
+
+            // Flag user as having used the trial
+            currentDbUser.has_used_trial = true;
+            await manager.save(currentDbUser);
+
+            return savedSub;
+        });
+    }
+
+    /**
      * Issues a free trial subscription to a user.
      */
     static async createTrialSubscription(user: User): Promise<Subscription> {
@@ -257,8 +321,8 @@ export class SubscriptionService {
                 trialPlan = new Plan();
                 trialPlan.name = 'Free Trial';
                 trialPlan.price_usdt = 0;
-                trialPlan.volume_gb = 5; // 5GB
-                trialPlan.duration_days = 1; // 24 Hours
+                trialPlan.volume_gb = 0.2; // 200MB
+                trialPlan.duration_days = 10 / (24 * 60); // 10 Minutes
                 await manager.save(trialPlan);
             }
 
@@ -272,7 +336,7 @@ export class SubscriptionService {
             sub.remaining_data_gb = trialPlan.volume_gb;
 
             const expiry = new Date();
-            expiry.setDate(expiry.getDate() + trialPlan.duration_days);
+            expiry.setMinutes(expiry.getMinutes() + Math.round(trialPlan.duration_days * 24 * 60));
 
             // Generate real config using 3X-UI
             // Use a temporary ID since sub.id doesn't exist until saved

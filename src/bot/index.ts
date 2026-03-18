@@ -207,23 +207,40 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
     if (!ctx.dbUser) return;
     const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
 
-    // try {
-    //     if (ctx.dbUser.has_used_trial) {
-    //         return ctx.reply(t(lang, 'trial_already_used'));
-    //     }
+    try {
+        if (ctx.dbUser.has_used_trial) {
+            return ctx.reply(t(lang, 'trial_already_used'));
+        }
 
-    //     await ctx.reply(t(lang, 'trial_processing'));
+        await ctx.reply(t(lang, 'trial_processing'));
 
-    //     const sub = await SubscriptionService.createTrialSubscription(ctx.dbUser);
+        const sub = await SubscriptionService.claimTrialSubscription(ctx.dbUser);
 
-    //     ctx.dbUser.has_used_trial = true;
+        // Send the .npvt config file to the user
+        const npvtConfig = await NpvtService.getConfigForSub(sub.id);
+        if (npvtConfig) {
+            const fileBuffer = Buffer.from(npvtConfig.file_data, 'base64');
+            await ctx.telegram.sendDocument(
+                ctx.dbUser.telegram_id.toString(),
+                { source: fileBuffer, filename: 'vprivate-config.npvt' },
+                { 
+                    caption: t(lang, 'trial_success', { dataGB: sub.remaining_data_gb.toString() }),
+                    parse_mode: 'Markdown'
+                }
+            );
+        } else {
+            // Fallback (though claimTrialSubscription should ensure npvtConfig exists or throw)
+            await ctx.reply(t(lang, 'trial_success', { dataGB: sub.remaining_data_gb.toString() }), { parse_mode: 'Markdown' });
+        }
 
-    //     await ctx.reply(t(lang, 'trial_success', { dataGB: sub.remaining_data_gb, config: sub.config_link }), { parse_mode: 'Markdown' });
-
-    // } catch (e: any) {
-    //     logger.error(`Trial Error: ${e.message}`);
-    //     await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : "Error.");
-    // }
+    } catch (e: any) {
+        logger.error(`Trial Error: ${e.message}`);
+        if (e.message.startsWith('NO_CONFIGS_AVAILABLE')) {
+            await ctx.reply(t(lang, 'trial_no_configs'));
+        } else {
+            await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : t(lang, 'generic_error'));
+        }
+    }
 });
 
 // Handle Language Selection (from inline keyboard)

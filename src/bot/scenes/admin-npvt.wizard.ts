@@ -43,7 +43,7 @@ export const adminNpvtWizard = new Scenes.WizardScene<CustomContext>(
         (ctx.scene.state as any).zipBuffer = zipBuffer;
 
         // Show plan selector
-        const plans = await PlanService.getAllPlans();
+        const plans = await PlanService.getAllPlansForAdmin();
         const buttons = plans.map(plan => [
             Markup.button.callback(`${plan.name}`, `npvt_plan_${plan.id}`)
         ]);
