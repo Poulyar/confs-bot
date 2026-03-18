@@ -226,7 +226,7 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
             await ctx.telegram.sendDocument(
                 ctx.dbUser.telegram_id.toString(),
                 { source: fileBuffer, filename: 'vprivate-config.npvt' },
-                { 
+                {
                     caption: t(lang, 'trial_success', { dataGB: sub.remaining_data_gb.toString() }),
                     parse_mode: 'Markdown'
                 }
