@@ -35,6 +35,9 @@ export class Transaction {
     @Column({ type: 'varchar', length: 20, default: 'pending' })
     status: string = 'pending';
 
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    network: string; // 'TRC20', 'ERC20', 'TON'
+
     @CreateDateColumn()
     created_at: Date;
 }

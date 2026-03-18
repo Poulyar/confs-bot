@@ -14,7 +14,7 @@ export class SubscriptionService {
     /**
      * Creates a pending subscription and a linked pending transaction for a user purchasing a plan.
      */
-    static async createPendingPurchase(user: User, plan: Plan, txHash: string, trackId: string, finalUsdtAmount: number, couponId?: number): Promise<{ subscription: Subscription, transaction: Transaction }> {
+    static async createPendingPurchase(user: User, plan: Plan, txHash: string, trackId: string, finalUsdtAmount: number, network: string, couponId?: number): Promise<{ subscription: Subscription, transaction: Transaction }> {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -53,6 +53,7 @@ export class SubscriptionService {
             tx.amount = finalUsdtAmount;
             tx.track_id = trackId; // Keep them unified
             tx.status = 'pending';
+            tx.network = network;
 
             const savedTx = await queryRunner.manager.save(tx);
 
@@ -251,15 +252,10 @@ export class SubscriptionService {
                 throw new Error("You have already claimed your free trial.");
             }
 
-            // Find or dynamically create 'Free Trial' plan
-            let trialPlan = await manager.findOne(Plan, { where: { name: 'Free Trial' } });
+            // Find 'Free Trial' plan
+            const trialPlan = await manager.findOne(Plan, { where: { name: 'Free Trial' } });
             if (!trialPlan) {
-                trialPlan = new Plan();
-                trialPlan.name = 'Free Trial';
-                trialPlan.price_usdt = 0;
-                trialPlan.volume_gb = 0.2; // 200MB
-                trialPlan.duration_days = 10 / (24 * 60); // 10 Minutes
-                trialPlan = await manager.save(trialPlan);
+                throw new Error("TRIAL_PLAN_NOT_FOUND");
             }
 
             const trackId = Math.floor(100000 + Math.random() * 900000).toString();
@@ -273,7 +269,7 @@ export class SubscriptionService {
             sub.remaining_data_gb = trialPlan.volume_gb;
 
             const expiry = new Date();
-            expiry.setMinutes(expiry.getMinutes() + Math.round(trialPlan.duration_days * 24 * 60));
+            expiry.setMinutes(expiry.getMinutes() + 10); // 10 Minutes (Overriding plan value)
             sub.expiry_date = expiry;
 
             // Wait to save 'sub' until we have an npvtConfig if possible, 
@@ -315,15 +311,10 @@ export class SubscriptionService {
                 throw new Error("You have already claimed your free trial.");
             }
 
-            // Find or dynamically create 'Free Trial' plan
-            let trialPlan = await manager.findOne(Plan, { where: { name: 'Free Trial' } });
+            // Find 'Free Trial' plan
+            const trialPlan = await manager.findOne(Plan, { where: { name: 'Free Trial' } });
             if (!trialPlan) {
-                trialPlan = new Plan();
-                trialPlan.name = 'Free Trial';
-                trialPlan.price_usdt = 0;
-                trialPlan.volume_gb = 0.2; // 200MB
-                trialPlan.duration_days = 10 / (24 * 60); // 10 Minutes
-                await manager.save(trialPlan);
+                throw new Error("TRIAL_PLAN_NOT_FOUND");
             }
 
             const trackId = Math.floor(100000 + Math.random() * 900000).toString();
@@ -336,13 +327,13 @@ export class SubscriptionService {
             sub.remaining_data_gb = trialPlan.volume_gb;
 
             const expiry = new Date();
-            expiry.setMinutes(expiry.getMinutes() + Math.round(trialPlan.duration_days * 24 * 60));
+            expiry.setMinutes(expiry.getMinutes() + 10); // 10 Minutes (Override plan value)
 
             // Generate real config using 3X-UI
             // Use a temporary ID since sub.id doesn't exist until saved
             const tempId = Date.now().toString().slice(-4);
             const email = `trial_${currentDbUser.id}_${tempId}`;
-            const limitGb = trialPlan.volume_gb;
+            const limitGb = 0.2; // 200MB (Override plan value)
             const expiryMs = expiry.getTime();
 
             const realConfig = await VpnService.createClient(email, limitGb, expiryMs);

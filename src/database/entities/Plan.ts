@@ -12,10 +12,10 @@ export class Plan {
     @Column({ type: 'decimal', precision: 10, scale: 2 })
     price_usdt: number;
 
-    @Column({ type: 'decimal', precision: 10, scale: 3 })
+    @Column({ type: 'integer' })
     volume_gb: number;
 
-    @Column({ type: 'decimal', precision: 10, scale: 4 })
+    @Column({ type: 'integer' })
     duration_days: number;
 
     @OneToMany(() => Subscription, (subscription) => subscription.plan)

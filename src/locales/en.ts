@@ -16,6 +16,7 @@ export const en = {
     trial_processing: "🎁 Processing your free trial request...",
     trial_success: "🎉 *Free Trial Activated!*\n\nWelcome to our VPN service! You now have a 10-minute connection with 200MB data limit.\n\n📥 **Import the attached config file** into your VPN client app.\n\nYou can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.",
     trial_no_configs: "⚠️ Sorry, we've run out of free trial configurations at the moment. Please try again later or contact support.",
+    trial_plan_not_found: "⚠️ Sorry, there is no free trial plan available at the moment. Please check back later.",
 
     // Misc
     unlimited: "Unlimited",
@@ -58,6 +59,7 @@ export const en = {
     admin_pending_title: "🔥 *Pending Approval*",
     admin_pending_user: "👤 *User ID:* `{{id}}` (@`{{username}}`)",
     admin_pending_plan: "📦 *Plan:* `{{planName}}` (${{amount}})",
+    admin_pending_network: "🌐 *Network:* `{{network}}`",
     admin_pending_track: "🧾 *Track ID:* `{{trackId}}`",
     admin_pending_hash: "🔗 *Hash:* `{{hash}}`",
     admin_pending_submitted: "Submitted around: {{date}}",

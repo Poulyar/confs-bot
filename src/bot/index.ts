@@ -90,6 +90,9 @@ const handlePendingSubs = async (ctx: any) => {
             let msg = `${t(lang, 'admin_pending_title')}\n\n`;
             msg += `${t(lang, 'admin_pending_user', { id: sub.user.id.toString(), username: sub.user.username || 'unknown' })}\n`;
             msg += `${t(lang, 'admin_pending_plan', { planName: sub.plan.name, amount: tx.amount.toString() })}\n`;
+            if (tx.network) {
+                msg += `${t(lang, 'admin_pending_network', { network: tx.network })}\n`;
+            }
             msg += `${t(lang, 'admin_pending_track', { trackId: sub.track_id })}\n`;
             msg += `${t(lang, 'admin_pending_hash', { hash: tx.tx_hash })}\n\n`;
             msg += `${t(lang, 'admin_pending_submitted', { date: tx.created_at.toLocaleString() })}`;
@@ -237,6 +240,8 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
         logger.error(`Trial Error: ${e.message}`);
         if (e.message.startsWith('NO_CONFIGS_AVAILABLE')) {
             await ctx.reply(t(lang, 'trial_no_configs'));
+        } else if (e.message.includes('TRIAL_PLAN_NOT_FOUND')) {
+            await ctx.reply(t(lang, 'trial_plan_not_found'));
         } else {
             await ctx.reply(e.message.includes('already') ? t(lang, 'trial_already_used') : t(lang, 'generic_error'));
         }

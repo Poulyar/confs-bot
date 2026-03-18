@@ -196,7 +196,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
             const finalPrice = state.finalPrice ?? plan.price_usdt;
 
             // Call the service to save to Postgres
-            const { subscription } = await SubscriptionService.createPendingPurchase(user, plan, txid, trackId, finalPrice, state.coupon_id);
+            const { subscription } = await SubscriptionService.createPendingPurchase(user, plan, txid, trackId, finalPrice, state.network || 'Unknown', state.coupon_id);
 
             await ctx.reply(
                 t(lang, 'checkout_txid_recorded', { txid, trackId }),
@@ -209,6 +209,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                     `🔔 *New Payment Submitted*\n\n` +
                     `👤 User: @${user.username || user.telegram_id} (ID: \`${user.telegram_id}\`)\n` +
                     `📦 Plan: \`${plan.name}\`\n` +
+                    `🌐 Network: \`${state.network || 'Unknown'}\`\n` +
                     `🧾 Track ID: \`${trackId}\`\n` +
                     `🔗 Hash: \`${txid}\`\n\n` +
                     `Use /pending to review.`;
