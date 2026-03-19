@@ -61,7 +61,7 @@ export const fa = {
     admin_pending_plan: "📦 *طرح:* `{{planName}}` (${{amount}})",
     admin_pending_network: "🌐 *شبکه:* `{{network}}` ",
     admin_pending_track: "🧾 *کد پیگیری:* `{{trackId}}`",
-    admin_pending_hash: "🔗 *هش:* `{{hash}}`",
+    admin_pending_hash: "🔗 *هش:* {{hash}}",
     admin_pending_submitted: "ارسال شده در حدود: {{date}}",
     admin_pending_approve: "✅ تایید",
     admin_pending_reject: "❌ رد کردن",

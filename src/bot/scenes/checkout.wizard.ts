@@ -4,6 +4,7 @@ import { PlanService } from '../../services/plan.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { CouponService } from '../../services/coupon.service';
 import { UserService } from '../../services/user.service';
+import { getExplorerLink } from '../../utils/explorer';
 import { logger } from '../../utils/logger';
 import { t, SupportedLanguage } from '../../locales';
 
@@ -211,7 +212,7 @@ export const checkoutWizard = new Scenes.WizardScene<CustomContext>(
                     `📦 Plan: \`${plan.name}\`\n` +
                     `🌐 Network: \`${state.network || 'Unknown'}\`\n` +
                     `🧾 Track ID: \`${trackId}\`\n` +
-                    `🔗 Hash: \`${txid}\`\n\n` +
+                    `🔗 Hash: ${getExplorerLink(state.network || 'Unknown', txid)}\n\n` +
                     `Use /pending to review.`;
 
                 for (const admin of admins) {

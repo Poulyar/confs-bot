@@ -61,7 +61,7 @@ export const en = {
     admin_pending_plan: "📦 *Plan:* `{{planName}}` (${{amount}})",
     admin_pending_network: "🌐 *Network:* `{{network}}`",
     admin_pending_track: "🧾 *Track ID:* `{{trackId}}`",
-    admin_pending_hash: "🔗 *Hash:* `{{hash}}`",
+    admin_pending_hash: "🔗 *Hash:* {{hash}}",
     admin_pending_submitted: "Submitted around: {{date}}",
     admin_pending_approve: "✅ Approve",
     admin_pending_reject: "❌ Reject",

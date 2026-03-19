@@ -2,6 +2,7 @@ import { Telegraf, session, Scenes } from 'telegraf';
 import { CustomContext } from '../types';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { startCommand, adminCommand } from './commands/start.command';
+import { getExplorerLink } from '../utils/explorer';
 import { logger } from '../utils/logger';
 import { AppDataSource } from '../database/data-source';
 import * as dotenv from 'dotenv';
@@ -94,7 +95,7 @@ const handlePendingSubs = async (ctx: any) => {
                 msg += `${t(lang, 'admin_pending_network', { network: tx.network })}\n`;
             }
             msg += `${t(lang, 'admin_pending_track', { trackId: sub.track_id })}\n`;
-            msg += `${t(lang, 'admin_pending_hash', { hash: tx.tx_hash })}\n\n`;
+            msg += `${t(lang, 'admin_pending_hash', { hash: getExplorerLink(tx.network || 'Unknown', tx.tx_hash) })}\n\n`;
             msg += `${t(lang, 'admin_pending_submitted', { date: tx.created_at.toLocaleString() })}`;
 
             const keyboard = Markup.inlineKeyboard([
