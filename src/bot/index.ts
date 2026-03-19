@@ -548,6 +548,20 @@ bot.hears([en.invite_link_btn, fa.invite_link_btn], async (ctx) => {
     }
 });
 
+// Handle "Setup Guide" button click
+bot.hears([en.setup_guide_btn, fa.setup_guide_btn], async (ctx) => {
+    if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
+    await ctx.reply(t(lang, 'setup_guide_msg'), { parse_mode: 'HTML' });
+});
+
+// Handle "Support" button click
+bot.hears([en.support_btn, fa.support_btn], async (ctx) => {
+    if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
+    await ctx.reply(t(lang, 'support_msg'), { parse_mode: 'HTML' });
+});
+
 bot.command('generate_invites', async (ctx) => {
     // Basic protection - hardcode to first user ID or add to env variable
     const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
