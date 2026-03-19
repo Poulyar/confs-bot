@@ -408,7 +408,7 @@ bot.action(/manage_sub_(\d+)/, async (ctx) => {
                     // Derive panel email: strip first hyphen-separated segment from filename (without extension)
                     // e.g. "Ardashir-vl-20G7-100.npvt" => "vl-20G7-100"
                     const baseName = npvtConfig.filename.replace(/\.npvt$/i, '');
-                    const panelEmail = baseName.substring(baseName.indexOf('-') + 1);
+                    const panelEmail = baseName.replace(/^[^-]+-vl-/, '');
 
                     const traffic = await VpnService.getClientTraffics(panelEmail);
                     if (traffic) {
