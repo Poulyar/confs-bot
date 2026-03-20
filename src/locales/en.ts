@@ -21,7 +21,7 @@ export const en = {
     // Trial
     trial_already_used: "Wait a minute! You have already claimed your free trial.\n\nUse the '🛒 Buy Plan' menu to purchase more data.",
     trial_processing: "🎁 Processing your free trial request...",
-    trial_success: "🎉 *Freexw Trial Activated!*\n\nYou now have a 12-minute connection from the first connection with 200MB data limit.\n\n📥 **Import the attached config file** into your npv tunnel app.\n\nYou can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.\n\n📚 Setup Guide\n\nYou can find our detailed setup guide for all devices in our official channel:\n\n🔗 https://t.me/+gtGJ0sxhYeVjNmM0",
+    trial_success: "🎉 *Freexw Trial Activated!*\n\nYou now have a 12-minute connection from the first connection with 100MB data limit.\n\n📥 **Import the attached config file** into your npv tunnel app.\n\nYou can always view your active connections and remaining data inside the **🛡 My Subscriptions** menu.\n\n📚 Setup Guide\n\nYou can find our detailed setup guide for all devices in our official channel:\n\n🔗 https://t.me/+gtGJ0sxhYeVjNmM0",
     trial_no_configs: "⚠️ Sorry, we've run out of free trial configurations at the moment. Please try again later or contact support.",
     trial_plan_not_found: "⚠️ Sorry, there is no free trial plan available at the moment. Please check back later.",
 
