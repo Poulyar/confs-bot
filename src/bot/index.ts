@@ -280,6 +280,48 @@ bot.action(/set_lang_(.*)/, async (ctx) => {
     }
 });
 
+// Handle Verification of Channel Join
+bot.action('verify_channel_join', async (ctx) => {
+    if (!ctx.dbUser) return;
+    const lang = (ctx.dbUser.language as SupportedLanguage) || 'en';
+    const channelId = process.env.OFFICIAL_CHANNEL_ID;
+
+    if (!channelId) {
+        logger.error("OFFICIAL_CHANNEL_ID is not set in .env");
+        return ctx.answerCbQuery("Error: Bot configuration is incomplete.");
+    }
+
+    try {
+        const member = await ctx.telegram.getChatMember(channelId, ctx.dbUser.telegram_id);
+        const isMember = ['member', 'creator', 'administrator'].includes(member.status);
+
+        if (isMember) {
+            ctx.dbUser.has_joined_channel = true;
+            await AppDataSource.getRepository('User').save(ctx.dbUser);
+            
+            await ctx.answerCbQuery(t(lang, 'membership_verified_msg'));
+            
+            // Delete the "please join" message
+            try { await ctx.deleteMessage(); } catch (e) {}
+            
+            // Send welcome message with main menu
+            const keyboard = Markup.keyboard([
+                [t(lang, 'buy_plan_btn'), t(lang, 'my_subs_btn')],
+                [t(lang, 'free_trial_btn'), t(lang, 'invite_link_btn')],
+                [t(lang, 'setup_guide_btn'), t(lang, 'profile_btn')],
+                [t(lang, 'support_btn')]
+            ]).resize();
+            
+            await ctx.reply(t(lang, 'welcome'), keyboard);
+        } else {
+            await ctx.answerCbQuery(t(lang, 'membership_not_found_alert'), { show_alert: true });
+        }
+    } catch (e: any) {
+        logger.error(`Channel Verify Error: ${e.message}`);
+        await ctx.answerCbQuery(t(lang, 'membership_not_found_alert'), { show_alert: true });
+    }
+});
+
 // Profile Handler
 bot.hears([en.profile_btn, fa.profile_btn], async (ctx) => {
     if (!ctx.dbUser) return;

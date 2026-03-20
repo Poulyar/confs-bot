@@ -21,6 +21,9 @@ export class User {
     @Column({ type: 'boolean', default: true })
     is_active: boolean = true;
 
+    @Column({ type: 'boolean', default: false })
+    has_joined_channel: boolean = false;
+
     @Column({ type: 'varchar', length: 5, nullable: true })
     language: 'en' | 'fa' | null;
 

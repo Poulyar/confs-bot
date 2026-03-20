@@ -9,7 +9,14 @@ export const en = {
     support_btn: "💬 Support",
     setup_guide_msg: "📚 <b>Setup Guide</b>\n\nYou can find our detailed setup guide for all devices in our official channel:\n\n🔗 https://t.me/+gtGJ0sxhYeVjNmM0",
     support_msg: "💬 <b>Support</b>\n\nIf you have any questions or issues, please contact our support team:\n\n👤 https://t.me/vPrivate_support",
-    change_lang_btn: "🌍 Farsi / Farsi",
+    change_lang_btn: "🌍 Farsi / فارسی",
+
+    // Channel Join
+    join_channel_msg: "✋ **Wait! One last step.**\n\nTo use our VPN service, you must first join our official announcement channel. This is where we share important updates and new configs.\n\n1. Join the channel below.\n2. Click the verification button.",
+    join_channel_btn: "📢 Join Channel",
+    verify_membership_btn: "✅ I JOINED",
+    membership_not_found_alert: "❌ Membership not detected! Please join the channel first and then click the button.",
+    membership_verified_msg: "🎉 Thank you! Membership verified. You can now use the bot.",
 
     // Trial
     trial_already_used: "Wait a minute! You have already claimed your free trial.\n\nUse the '🛒 Buy Plan' menu to purchase more data.",

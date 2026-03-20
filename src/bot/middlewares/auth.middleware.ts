@@ -38,6 +38,29 @@ export const authMiddleware = async (ctx: CustomContext, next: () => Promise<voi
             return;
         }
 
+        // If the user hasn't joined the official channel yet, force them to do so
+        if (!user.has_joined_channel && !user.is_admin) {
+            // Allow the callback query for verifying channel join to pass through
+            if (ctx.callbackQuery && 'data' in ctx.callbackQuery) {
+                if (ctx.callbackQuery.data === 'verify_channel_join') {
+                    return await next();
+                }
+            }
+            
+            // Re-importing 't' isn't easy here without passing it or re-importing, 
+            // but we can use the locale strings directly or import 't'
+            const { t } = require('../../locales');
+            const lang = user.language as any;
+            
+            const keyboard = Markup.inlineKeyboard([
+                [Markup.button.url(t(lang, 'join_channel_btn'), process.env.OFFICIAL_CHANNEL_LINK!)],
+                [Markup.button.callback(t(lang, 'verify_membership_btn'), 'verify_channel_join')]
+            ]);
+
+            await ctx.reply(t(lang, 'join_channel_msg'), { parse_mode: 'Markdown', ...keyboard });
+            return;
+        }
+
         return await next(); // Proceed to next handler
     } else {
         // User does not exist (Gatekeeping phase)
