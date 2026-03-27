@@ -157,8 +157,8 @@ bot.action(/approve_tx_(\d+)/, async (ctx) => {
             const baseName = npvtConfig.filename.replace(/\.npvt$/i, '');
             const panelEmail = baseName.replace(/^[^-]+-vl-/, '');
             
-            // Add track_id tag to panel
-            await VpnService.updateClientComment(panelEmail, sub.track_id, sub.user.telegram_id);
+            // Add track_id and telegram_id tags to panel
+            await VpnService.updateClientTags(panelEmail, sub.track_id, sub.user.telegram_id);
 
             const fileBuffer = Buffer.from(npvtConfig.file_data, 'base64');
             await ctx.telegram.sendDocument(
@@ -253,8 +253,8 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
             const baseName = npvtConfig.filename.replace(/\.npvt$/i, '');
             const panelEmail = baseName.replace(/^[^-]+-vl-/, '');
             
-            // Add track_id tag to panel
-            await VpnService.updateClientComment(panelEmail, sub.track_id, ctx.dbUser.telegram_id);
+            // Add track_id and telegram_id tags to panel
+            await VpnService.updateClientTags(panelEmail, sub.track_id, ctx.dbUser.telegram_id);
 
             const fileBuffer = Buffer.from(npvtConfig.file_data, 'base64');
             await ctx.telegram.sendDocument(

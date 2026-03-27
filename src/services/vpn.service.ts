@@ -186,12 +186,12 @@ export class VpnService {
     }
 
     /**
-     * Updates a client's comment on the 3X-UI panel.
+     * Updates a client's comment and tgId on the 3X-UI panel.
      * @param email The client's email identifier on the panel
      * @param trackId The subscription's track ID
      * @param telegramId The user's Telegram ID
      */
-    static async updateClientComment(email: string, trackId: string, telegramId: number | string): Promise<boolean> {
+    static async updateClientTags(email: string, trackId: string, telegramId: number | string): Promise<boolean> {
         if (!this.sessionCookie) {
             const loggedIn = await this.login();
             if (!loggedIn) return false;
@@ -210,12 +210,13 @@ export class VpnService {
             const client = settings.clients.find((c: any) => c.email === email);
 
             if (!client) {
-                logger.warn(`Could not find client ${email} in inbound ${this.INBOUND_ID} to update comment.`);
+                logger.warn(`Could not find client ${email} in inbound ${this.INBOUND_ID} to update tags.`);
                 return false;
             }
 
-            // 2. Update the comment field
-            client.comment = `sub:${trackId}|tg:${telegramId}`;
+            // 2. Update the comment and tgId fields
+            client.comment = `sub:${trackId}`;
+            client.tgId = telegramId.toString();
 
             // 3. Send the update request
             const payload = {
@@ -226,18 +227,18 @@ export class VpnService {
             const updateRes = await this.api.post(`/panel/api/inbounds/updateClient/${client.id}`, payload);
 
             if (updateRes.data.success) {
-                logger.info(`Successfully updated comment for client ${email}`);
+                logger.info(`Successfully updated tags for client ${email}`);
                 return true;
             } else {
-                logger.error(`Failed to update comment for client ${email}: ${updateRes.data.msg}`);
+                logger.error(`Failed to update tags for client ${email}: ${updateRes.data.msg}`);
                 return false;
             }
         } catch (error: any) {
             if (error.response?.status === 401) {
                 this.sessionCookie = null;
-                logger.warn('3X-UI session expired during updateClientComment.');
+                logger.warn('3X-UI session expired during updateClientTags.');
             } else {
-                logger.error(`updateClientComment error for ${email}: ${error.message}`);
+                logger.error(`updateClientTags error for ${email}: ${error.message}`);
             }
             return false;
         }
