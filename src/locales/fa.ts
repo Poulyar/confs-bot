@@ -128,6 +128,7 @@ export const fa = {
 
     // Admin NPVT Pool
     admin_npvt_btn: "📦 آپلود کانفیگ‌ها",
+    admin_npvt_stats_btn: "📊 وضعیت مخزن",
     admin_npvt_pool_status: "📦 وضعیت مخزن کانفیگ:",
     admin_npvt_send_zip: "لطفاً یک فایل .zip حاوی فایل‌های .npvt کانفیگ ارسال کنید.",
     admin_npvt_select_plan: "این کانفیگ‌ها برای کدام اشتراک هستند؟",

@@ -40,7 +40,8 @@ export const adminCommand = async (ctx: CustomContext) => {
     const kb = Markup.inlineKeyboard([
         [Markup.button.callback(t(lang, 'admin_coupon_btn'), 'generate_coupon')],
         [Markup.button.callback(t(lang, 'admin_pending_btn'), 'admin_pending_subs')],
-        [Markup.button.callback(t(lang, 'admin_npvt_btn'), 'upload_npvt_configs')]
+        [Markup.button.callback(t(lang, 'admin_npvt_btn'), 'upload_npvt_configs')],
+        [Markup.button.callback(t(lang, 'admin_npvt_stats_btn'), 'npvt_stats')]
     ]);
 
     await ctx.reply(t(lang, 'admin_panel_title'), kb);

@@ -63,6 +63,27 @@ bot.action('upload_npvt_configs', async (ctx) => {
     await ctx.answerCbQuery();
 });
 
+bot.action('npvt_stats', async (ctx) => {
+    if (!ctx.dbUser?.is_admin) return;
+    const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
+    try {
+        const stats = await NpvtService.getPoolStats();
+        let msg = `📊 *${t(lang, 'admin_npvt_pool_status')}*\n\n`;
+        for (const stat of stats) {
+            msg += `*${stat.planName}*\n`;
+            msg += `Available: \`${stat.available}\` / \`${stat.total}\`\n\n`;
+        }
+        if (stats.length === 0) {
+            msg += "No configs uploaded yet.";
+        }
+        await ctx.reply(msg, { parse_mode: 'Markdown' });
+        await ctx.answerCbQuery();
+    } catch (e) {
+        logger.error("Error fetching npvt stats", e);
+        await ctx.answerCbQuery("Error", { show_alert: true });
+    }
+});
+
 
 const handlePendingSubs = async (ctx: any) => {
     const lang = (ctx.dbUser?.language as SupportedLanguage) || 'en';
@@ -133,10 +154,16 @@ bot.action(/approve_tx_(\d+)/, async (ctx) => {
         // Send the .npvt config file to the user
         const npvtConfig = await NpvtService.getConfigForSub(sub.id);
         if (npvtConfig) {
+            const baseName = npvtConfig.filename.replace(/\.npvt$/i, '');
+            const panelEmail = baseName.replace(/^[^-]+-vl-/, '');
+            
+            // Add track_id tag to panel
+            await VpnService.updateClientComment(panelEmail, sub.track_id, sub.user.telegram_id);
+
             const fileBuffer = Buffer.from(npvtConfig.file_data, 'base64');
             await ctx.telegram.sendDocument(
                 sub.user.telegram_id.toString(),
-                { source: fileBuffer, filename: 'vprivate-config.npvt' },
+                { source: fileBuffer, filename: `${panelEmail}.npvt` },
                 { caption: t(targetLang, 'admin_approve_user_dm', { trackId: sub.track_id }) }
             );
         } else {
@@ -223,10 +250,16 @@ bot.hears([en.free_trial_btn, fa.free_trial_btn], async (ctx) => {
         // Send the .npvt config file to the user
         const npvtConfig = await NpvtService.getConfigForSub(sub.id);
         if (npvtConfig) {
+            const baseName = npvtConfig.filename.replace(/\.npvt$/i, '');
+            const panelEmail = baseName.replace(/^[^-]+-vl-/, '');
+            
+            // Add track_id tag to panel
+            await VpnService.updateClientComment(panelEmail, sub.track_id, ctx.dbUser.telegram_id);
+
             const fileBuffer = Buffer.from(npvtConfig.file_data, 'base64');
             await ctx.telegram.sendDocument(
                 ctx.dbUser.telegram_id.toString(),
-                { source: fileBuffer, filename: 'vprivate-config.npvt' },
+                { source: fileBuffer, filename: `${panelEmail}.npvt` },
                 {
                     caption: t(lang, 'trial_success', { dataGB: sub.remaining_data_gb.toString() }),
                     parse_mode: 'Markdown'
@@ -550,8 +583,11 @@ bot.action(/redownload_config_(\d+)/, async (ctx) => {
         }
 
         const fileBuffer = Buffer.from(config.file_data, 'base64');
+        const baseName = config.filename.replace(/\.npvt$/i, '');
+        const panelEmail = baseName.replace(/^[^-]+-vl-/, '');
+
         await ctx.replyWithDocument(
-            { source: fileBuffer, filename: 'vprivate-config.npvt' },
+            { source: fileBuffer, filename: `${panelEmail}.npvt` },
             { caption: t(lang, 'sub_config_redownload_caption') }
         );
     } catch (e) {

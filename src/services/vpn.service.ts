@@ -184,4 +184,62 @@ export class VpnService {
             return null;
         }
     }
+
+    /**
+     * Updates a client's comment on the 3X-UI panel.
+     * @param email The client's email identifier on the panel
+     * @param trackId The subscription's track ID
+     * @param telegramId The user's Telegram ID
+     */
+    static async updateClientComment(email: string, trackId: string, telegramId: number | string): Promise<boolean> {
+        if (!this.sessionCookie) {
+            const loggedIn = await this.login();
+            if (!loggedIn) return false;
+        }
+
+        try {
+            // 1. Fetch the inbound to find the client's full object
+            const inboundRes = await this.api.get(`/panel/api/inbounds/get/${this.INBOUND_ID}`);
+            if (!inboundRes.data.success || !inboundRes.data.obj) {
+                logger.warn(`Could not get inbound ${this.INBOUND_ID} to update comment.`);
+                return false;
+            }
+
+            const inbound = inboundRes.data.obj;
+            const settings = JSON.parse(inbound.settings);
+            const client = settings.clients.find((c: any) => c.email === email);
+
+            if (!client) {
+                logger.warn(`Could not find client ${email} in inbound ${this.INBOUND_ID} to update comment.`);
+                return false;
+            }
+
+            // 2. Update the comment field
+            client.comment = `sub:${trackId}|tg:${telegramId}`;
+
+            // 3. Send the update request
+            const payload = {
+                id: this.INBOUND_ID,
+                settings: JSON.stringify({ clients: [client] })
+            };
+
+            const updateRes = await this.api.post(`/panel/api/inbounds/updateClient/${client.id}`, payload);
+
+            if (updateRes.data.success) {
+                logger.info(`Successfully updated comment for client ${email}`);
+                return true;
+            } else {
+                logger.error(`Failed to update comment for client ${email}: ${updateRes.data.msg}`);
+                return false;
+            }
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                this.sessionCookie = null;
+                logger.warn('3X-UI session expired during updateClientComment.');
+            } else {
+                logger.error(`updateClientComment error for ${email}: ${error.message}`);
+            }
+            return false;
+        }
+    }
 }

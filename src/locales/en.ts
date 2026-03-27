@@ -128,6 +128,7 @@ export const en = {
 
     // Admin NPVT Pool
     admin_npvt_btn: "📦 Upload Configs",
+    admin_npvt_stats_btn: "📊 Pool Stats",
     admin_npvt_pool_status: "📦 Config Pool Status:",
     admin_npvt_send_zip: "Please send a .zip file containing your .npvt config files.",
     admin_npvt_select_plan: "Which plan are these configs for?",
