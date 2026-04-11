@@ -14,7 +14,8 @@ export class PlanService {
     static async getAllPlans(): Promise<Plan[]> {
         return await this.getRepository().find({
             where: {
-                name: Not('Free Trial') // Hardcoded exclusion based on SubscriptionService gen name
+                name: Not('Free Trial'), // Hardcoded exclusion based on SubscriptionService gen name
+                is_available: true
             },
             order: {
                 price_usdt: 'ASC'

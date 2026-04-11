@@ -18,6 +18,9 @@ export class Plan {
     @Column({ type: 'integer' })
     duration_days: number;
 
+    @Column({ type: 'boolean', default: true })
+    is_available: boolean;
+
     @OneToMany(() => Subscription, (subscription) => subscription.plan)
     subscriptions: Subscription[];
 }
